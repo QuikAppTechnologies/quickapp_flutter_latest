@@ -97,6 +97,7 @@ definitions:
     #      script: |
     #        flutter build appbundle --release --dart-define=WEB_URL=$WEB_URL
 
+
     - &build_debug_apk
       name: Build APK
       script: |
