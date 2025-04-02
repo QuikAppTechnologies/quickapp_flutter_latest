@@ -1,0 +1,158 @@
+definitions:
+  # mac_mini_m1: &mac_mini_m1
+  #  instance_type: mac_mini_m1
+  # max_build_duration: 60
+
+  environment:
+    app_details:
+      vars:
+        APP_NAME: $APP_NAME
+        ORG_NAME: $ORG_NAME
+        SPLASH: $SPLASH
+        LOGO_URL: $LOGO_URL
+        WEB_URL: $WEB_URL
+        url: $WEB_URL
+        firebase_config_android: $firebase_config_android
+
+  artifacts:
+    #- &ipa_file build/ios/ipa/*.ipa
+    #- &xcode_log /tmp/xcodebuild_logs/*.log
+    #- &dsym $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    # - &app $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+    #    - &android_abb build/**/outputs/**/*.aab
+    - &android_apk build/**/outputs/**/*.apk
+    #- &android_mapping_txt build/**/outputs/**/mapping.txt
+    #3- &flutter_drive_log flutter_drive.log
+
+  email_release: &email_release
+    email:
+      recipients:
+        - thamaraikannan137@gmail.com
+      notify:
+        success: true
+        failure: true
+
+  scripts:
+    - &pub_get
+      name: Get packages
+      script: |
+        flutter pub get
+
+    - &debug_env
+      name: Debug Environment Variables
+      script: |
+        echo "APP_NAME: $APP_NAME"
+        echo "ORG_NAME: $ORG_NAME"
+        echo "WEB_URL: $WEB_URL"
+        echo "SPLASH: $SPLASH"
+        echo "firebase_config_android: $firebase_config_android"
+
+    - &google_json
+      name: Get firebase config for android from Url
+      script: |
+        wget -O android/app/google-services.json $firebase_config_android
+        cat android/app/google-services.json
+        flutter pub get
+
+
+    - &get_logo
+      name: Get logo image from logoUrl
+      script: |
+        mkdir -p assets/images/
+        wget -O assets/images/logo.png $LOGO_URL
+        flutter pub get
+
+    - &get_splash
+      name: Get splash screen image from splash image from Url
+      script: |
+        mkdir -p assets/images/
+        wget -O assets/images/splash.png $SPLASH
+        flutter pub get
+
+    - &set_launcher_icons
+      name: Generate Launcher Icons
+      script: |
+        flutter pub run flutter_launcher_icons:main
+        flutter pub get
+    - &set_splash_icons
+      name: Add splash screen to build
+      script: |
+        flutter pub run flutter_native_splash:create
+        flutter pub get
+
+    - &change_bundle_name
+      name: Change bundle name
+      script: |
+        flutter pub run rename setBundleId  --value "$ORG_NAME.$APP_NAME"
+        flutter pub get
+
+    - &change_app_name
+      name: Change app name
+      script: |
+        flutter pub run rename setAppName --value "$APP_NAME"
+        flutter pub get
+    #
+    #    - &build_abb
+    #      name: Build ABB
+    #      script: |
+    #        flutter build appbundle --release --dart-define=WEB_URL=$WEB_URL
+
+    - &build_debug_apk
+      name: Build APK
+      script: |
+        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
+
+    - &build_release_apk
+      name: Build APK
+      script: |
+        flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
+
+
+workflows:
+  android-workflow:
+    name: Android Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    scripts:
+      - *pub_get
+      - *debug_env
+      - *get_logo
+      - *set_launcher_icons
+      - *get_splash
+      - *set_splash_icons
+      - *change_bundle_name
+      - *change_app_name
+      #        - *build_release_apk
+      #        - *google_json
+      #        - *build_abb
+      - *build_debug_apk
+    artifacts:
+      - *android_apk
+    #        - *android_abb
+    publishing: *email_release
+  android-release-workflow:
+    name: Android release Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+    scripts:
+      - *pub_get
+      - *debug_env
+      - *get_logo
+      - *set_launcher_icons
+      - *get_splash
+      - *set_splash_icons
+      - *change_bundle_name
+      - *change_app_name
+      - *google_json
+      - *build_release_apk
+
+      #        - *build_abb
+    #        - *build_debug_apk
+    artifacts:
+      - *android_apk
+    #        - *android_abb
+    publishing: *email_release
