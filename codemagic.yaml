@@ -98,6 +98,18 @@ definitions:
     #      script: |
     #        flutter build appbundle --release --dart-define=WEB_URL=$WEB_URL
 
+    
+
+    - &build_debug_apk
+      name: Build APK
+      script: |
+        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
+
+    - &build_release_apk
+      name: Build APK
+      script: |
+        flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
+
     - &update_android_package
       name: Update Android Package Name
       script: |
@@ -132,16 +144,6 @@ definitions:
 
         echo "✔ Package name updated to: $PACKAGE_NAME"
 
-
-    - &build_debug_apk
-      name: Build APK
-      script: |
-        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
-
-    - &build_release_apk
-      name: Build APK
-      script: |
-        flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
 
 
 workflows:
