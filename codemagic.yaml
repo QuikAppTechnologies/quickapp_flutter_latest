@@ -126,7 +126,7 @@ workflows:
       - *set_splash_icons
       - *change_bundle_name
       - *change_app_name
-      #        - *build_release_apk
+      - *build_release_apk
       #        - *google_json
       #        - *build_abb
       - *build_debug_apk
