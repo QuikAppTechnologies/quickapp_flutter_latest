@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 WebViewEnvironment? webViewEnvironment;
 
@@ -60,7 +63,7 @@ class _MyAppState extends State<MyApp> {
     //       );
   }
   DateTime? _lastBackPressed; // Track last back press time
-  
+
       Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -78,20 +81,41 @@ class _MyAppState extends State<MyApp> {
     ),
     );
   }
-   Future<bool> _onBackPressed() async {
+  //  Future<bool> _onBackPressed() async {
+  //   DateTime now = DateTime.now();
+  //   if (_lastBackPressed == null || 
+  //       now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+  //     _lastBackPressed = now;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text("Press back again to exit"),
+  //         duration: Duration(seconds: 2),
+  //       ),
+  //     );
+  //     return Future.value(false); // Do not exit
+  //   }
+  //   return Future.value(true); // Exit app
+  // }
+
+Future<bool> _onBackPressed() async {
     DateTime now = DateTime.now();
     if (_lastBackPressed == null || 
         now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
       _lastBackPressed = now;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Press back again to exit"),
-          duration: Duration(seconds: 2),
-        ),
+
+      // Show Toast Message
+      Fluttertoast.showToast(
+        msg: "Press back again to exit",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black54,
+        textColor: Colors.white,
       );
+
       return Future.value(false); // Do not exit
     }
     return Future.value(true); // Exit app
   }
+
 
 }
