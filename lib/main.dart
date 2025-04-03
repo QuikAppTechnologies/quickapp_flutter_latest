@@ -59,32 +59,14 @@ class _MyAppState extends State<MyApp> {
     //         },
     //       );
   }
-
-  // Widget build(BuildContext context) {
-  //   return MaterialApp(
-  //     debugShowCheckedModeBanner: false,
-  //     home: Scaffold(
-  //       // appBar: AppBar(title: const Text("")),
-  //       body: SafeArea(
-  //           child: Column(
-  //         children: [
-  //           Stack(
-  //             children: [
-  //               InAppWebView(
-  //                 key: webViewKey,
-  //                 webViewEnvironment: webViewEnvironment,
-  //                 initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
-  //               )
-  //             ],
-  //           )
-  //         ],
-  //       )),
-  //     ),
-  //   );
+  DateTime? _lastBackPressed; // Track last back press time
+  
       Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
+      home:  WillPopScope( // Intercept back button
+        onWillPop: _onBackPressed, 
+        child: Scaffold(
         // appBar: AppBar(title: const Text("")),
         body: SafeArea(
             child: InAppWebView(
@@ -93,6 +75,23 @@ class _MyAppState extends State<MyApp> {
                   initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
                 ),),
       ),
+    ),
     );
   }
+   Future<bool> _onBackPressed() async {
+    DateTime now = DateTime.now();
+    if (_lastBackPressed == null || 
+        now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+      _lastBackPressed = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Press back again to exit"),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return Future.value(false); // Do not exit
+    }
+    return Future.value(true); // Exit app
+  }
+
 }
