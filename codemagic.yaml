@@ -102,14 +102,21 @@ definitions:
       name: Update Android Package Name
       script: |
         echo "Updating Android package name..."
+
+        # Validate ORG_NAME and APP_NAME
         if [ -z "$ORG_NAME" ] || [ -z "$APP_NAME" ]; then
           echo "❌ ERROR: ORG_NAME or APP_NAME is empty. Check your environment variables."
           exit 1
         fi
 
-        # Create valid package name
-        PACKAGE_NAME=$(echo "$ORG_NAME.$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
-        
+        # Convert to lowercase and replace spaces with underscores
+        CLEANED_ORG_NAME=$(echo "$ORG_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        CLEANED_APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+
+        # Construct a valid package name
+        PACKAGE_NAME="$CLEANED_ORG_NAME.$CLEANED_APP_NAME"
+
+        # Validate package name format
         if [[ ! "$PACKAGE_NAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$ ]]; then
           echo "❌ ERROR: Invalid package name: $PACKAGE_NAME"
           exit 1
