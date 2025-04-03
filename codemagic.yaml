@@ -98,6 +98,20 @@ definitions:
     #      script: |
     #        flutter build appbundle --release --dart-define=WEB_URL=$WEB_URL
 
+    - &update_android_package
+      name: Update Android Package Name
+      script: |
+        echo "Updating Android package name..."
+        PACKAGE_NAME="$ORG_NAME.$APP_NAME"
+
+        # Update package name in AndroidManifest.xml
+        sed -i '' "s/package=\"com.example.app\"/package=\"$PACKAGE_NAME\"/g" android/app/src/main/AndroidManifest.xml
+
+        # Update applicationId in build.gradle
+        sed -i '' "s/applicationId \"com.example.app\"/applicationId \"$PACKAGE_NAME\"/g" android/app/build.gradle
+
+        echo "Package name updated to: $PACKAGE_NAME"
+
 
     - &build_debug_apk
       name: Build APK
@@ -129,6 +143,7 @@ workflows:
       - *build_release_apk
       #        - *google_json
       #        - *build_abb
+      - *update_android_package  # ✅ Added package update script here
       - *build_debug_apk
     artifacts:
       - *android_apk
@@ -150,6 +165,7 @@ workflows:
       - *change_bundle_name
       - *change_app_name
       - *google_json
+      - *update_android_package  # ✅ Added package update script here
       - *build_release_apk
 
       #        - *build_abb
