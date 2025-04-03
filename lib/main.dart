@@ -60,25 +60,38 @@ class _MyAppState extends State<MyApp> {
     //       );
   }
 
-  Widget build(BuildContext context) {
+  // Widget build(BuildContext context) {
+  //   return MaterialApp(
+  //     debugShowCheckedModeBanner: false,
+  //     home: Scaffold(
+  //       // appBar: AppBar(title: const Text("")),
+  //       body: SafeArea(
+  //           child: Column(
+  //         children: [
+  //           Stack(
+  //             children: [
+  //               InAppWebView(
+  //                 key: webViewKey,
+  //                 webViewEnvironment: webViewEnvironment,
+  //                 initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
+  //               )
+  //             ],
+  //           )
+  //         ],
+  //       )),
+  //     ),
+  //   );
+      Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         // appBar: AppBar(title: const Text("")),
         body: SafeArea(
-            child: Column(
-          children: [
-            Stack(
-              children: [
-                InAppWebView(
+            child: InAppWebView(
                   key: webViewKey,
                   webViewEnvironment: webViewEnvironment,
                   initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
-                )
-              ],
-            )
-          ],
-        )),
+                ),),
       ),
     );
   }
