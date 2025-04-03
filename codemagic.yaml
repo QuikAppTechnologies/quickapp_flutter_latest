@@ -27,7 +27,8 @@ definitions:
   email_release: &email_release
     email:
       recipients:
-        - thamaraikannan137@gmail.com
+        - prasannasrie@gmail.com
+        # - thamaraikannan137@gmail.com
       notify:
         success: true
         failure: true

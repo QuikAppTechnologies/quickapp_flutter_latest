@@ -68,8 +68,7 @@ class _MyAppState extends State<MyApp> {
         body: SafeArea(
             child: Column(
           children: [
-            Expanded(
-                child: Stack(
+            Stack(
               children: [
                 InAppWebView(
                   key: webViewKey,
@@ -77,7 +76,7 @@ class _MyAppState extends State<MyApp> {
                   initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
                 )
               ],
-            )),
+            )
           ],
         )),
       ),
