@@ -193,11 +193,9 @@ workflows:
       - *set_splash_icons
       - *change_bundle_name
       - *change_app_name
-      - *google_json
       - *build_release_apk
-
-      #        - *build_abb
-    #        - *build_debug_apk
+#     - *build_abb
+#     - *build_debug_apk
     artifacts:
       - *android_apk
     #        - *android_abb
