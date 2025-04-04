@@ -152,6 +152,7 @@ workflows:
       - *debug_env
       - *update_android_package  # Added package update script here
       - *get_logo
+      - *google_json
       - *set_launcher_icons
       - *get_splash
       - *set_splash_icons
@@ -179,6 +180,7 @@ workflows:
       - *set_launcher_icons
       - *get_splash
       - *set_splash_icons
+      - *google_json
       - *change_bundle_name
       - *change_app_name
       - *google_json
