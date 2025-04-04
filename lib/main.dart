@@ -5,17 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   String webUrl = const String.fromEnvironment('WEB_URL',
       defaultValue: 'https://pixaware.co/');
 
   runApp(MyApp(webUrl: webUrl));
 }
-
+// Handle background messages
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint("Handling background message: ${message.messageId}");
+}
 class MyApp extends StatefulWidget {
   final String webUrl;
   const MyApp({super.key, required this.webUrl});
@@ -43,6 +53,14 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    FirebaseMessaging.instance.subscribeToTopic("all");
+FirebaseMessaging.instance.requestPermission();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      Fluttertoast.showToast(
+          msg: "Notification: ${message.notification?.title}");
+    });
     //
     // pullToRefreshController = kIsWeb ||
     //         ![TargetPlatform.iOS, TargetPlatform.android]
