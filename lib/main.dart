@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 WebViewEnvironment? webViewEnvironment;
 
@@ -73,29 +74,30 @@ class _MyAppState extends State<MyApp> {
         // appBar: AppBar(title: const Text("")),
         body: SafeArea(
             child: InAppWebView(
-                  key: webViewKey,
-                  webViewEnvironment: webViewEnvironment,
-                  initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
-                ),),
+              key: webViewKey,
+              webViewEnvironment: webViewEnvironment,
+              initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
+                var uri = navigationAction.request.url;
+
+                if (uri != null && !uri.toString().contains(widget.webUrl)) {
+                  // Open external links in the default browser
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                  return NavigationActionPolicy
+                      .CANCEL; // Prevent WebView from loading the URL
+                }
+
+                return NavigationActionPolicy.ALLOW; // Allow internal links
+              },
+            ),
+                ),
       ),
     ),
     );
   }
-  //  Future<bool> _onBackPressed() async {
-  //   DateTime now = DateTime.now();
-  //   if (_lastBackPressed == null || 
-  //       now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
-  //     _lastBackPressed = now;
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text("Press back again to exit"),
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //     return Future.value(false); // Do not exit
-  //   }
-  //   return Future.value(true); // Exit app
-  // }
+
 
 Future<bool> _onBackPressed() async {
     DateTime now = DateTime.now();
