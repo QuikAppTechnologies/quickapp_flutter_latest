@@ -16,7 +16,16 @@ WebViewEnvironment? webViewEnvironment;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+
+  try {
+    await Firebase.initializeApp();
+    print("✅ Firebase initialized");
+  } catch (e) {
+    print("⚠️ Firebase initialization skipped or failed: $e");
+  }
+
+
+  // await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   String webUrl = const String.fromEnvironment('WEB_URL',

@@ -56,15 +56,30 @@ definitions:
     #     flutter pub get
 
     - &google_json
-      name: Get firebase config for android from Url
+      name: Firebase Setup (Conditional)
       script: |
         if [ -n "$firebase_config_android" ]; then
+          echo "🔧 firebase_config_android detected. Configuring Firebase..."
+          
+          # Download google-services.json
           wget -O android/app/google-services.json $firebase_config_android
-          echo "google-services.json downloaded."
+          echo "✔ google-services.json downloaded."
+
+          # Add Firebase Gradle plugins
+          sed -i '' '/com.android.application/a\
+          apply plugin: '\''com.google.gms.google-services'\''\
+          ' android/app/build.gradle
+
+          # Ensure dependencies in project build.gradle
+          sed -i '' '/dependencies {/a\
+            classpath '\''com.google.gms:google-services:4.3.15'\''\
+          ' android/build.gradle
+
+          echo "✔ Firebase Gradle config added."
         else
-          echo "firebase_config_android URL is missing. Skipping google-services.json download."
+          echo "⚠️ firebase_config_android URL not provided. Skipping Firebase setup."
         fi
-        flutter pub get
+
 
     - &get_logo
       name: Get logo image from logoUrl
