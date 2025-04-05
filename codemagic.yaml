@@ -58,27 +58,42 @@ definitions:
     - &google_json
       name: Firebase Setup (Conditional)
       script: |
+        USE_FIREBASE=false
+
         if [ -n "$firebase_config_android" ]; then
           echo "🔧 firebase_config_android detected. Configuring Firebase..."
-          
+
           # Download google-services.json
-          wget -O android/app/google-services.json $firebase_config_android
+          wget -O android/app/google-services.json "$firebase_config_android"
           echo "✔ google-services.json downloaded."
 
-          # Add Firebase Gradle plugins
-          sed -i '' '/com.android.application/a\
-          apply plugin: '\''com.google.gms.google-services'\''\
-          ' android/app/build.gradle
-
-          # Ensure dependencies in project build.gradle
-          sed -i '' '/dependencies {/a\
-            classpath '\''com.google.gms:google-services:4.3.15'\''\
-          ' android/build.gradle
-
-          echo "✔ Firebase Gradle config added."
+          USE_FIREBASE=true
         else
           echo "⚠️ firebase_config_android URL not provided. Skipping Firebase setup."
         fi
+
+        # Conditionally modify Gradle files
+        if [ "$USE_FIREBASE" = true ]; then
+          echo "📦 Adding Firebase plugin to build.gradle files..."
+
+          # Ensure 'com.google.gms.google-services' plugin is applied
+          if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
+            echo "Applying Firebase plugin in app/build.gradle..."
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+          fi
+
+          # Ensure Firebase classpath is present in project-level build.gradle
+          if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+            echo "Adding Firebase classpath to project build.gradle..."
+            sed -i '' '/dependencies {/a\
+              classpath '\''com.google.gms:google-services:4.3.15'\''\
+            ' android/build.gradle
+          fi
+
+          echo "✅ Firebase setup complete."
+        fi
+
+        flutter pub get
 
 
     - &get_logo
