@@ -161,7 +161,7 @@ workflows:
       - *pub_get
       - *debug_env
       - *update_android_package  # Added package update script here
-      # - *google_json
+      - *google_json
       - *get_logo
       - *set_launcher_icons
       - *get_splash
