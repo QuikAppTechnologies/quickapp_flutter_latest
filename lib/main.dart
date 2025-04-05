@@ -7,6 +7,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+bool hasInternet = true;
 
 WebViewEnvironment? webViewEnvironment;
 
@@ -61,6 +64,26 @@ FirebaseMessaging.instance.requestPermission();
       Fluttertoast.showToast(
           msg: "Notification: ${message.notification?.title}");
     });
+
+      // Internet monitoring
+   Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      _checkInternetConnection();
+    });
+
+    _checkInternetConnection(); // Initial check
+  }
+
+  Future<void> _checkInternetConnection() async {
+    final result = await Connectivity().checkConnectivity();
+    final isOnline = result != ConnectivityResult.none;
+
+    if (mounted) {
+      setState(() {
+        hasInternet = isOnline;
+      });
+    }
     //
     // pullToRefreshController = kIsWeb ||
     //         ![TargetPlatform.iOS, TargetPlatform.android]
@@ -91,7 +114,8 @@ FirebaseMessaging.instance.requestPermission();
         child: Scaffold(
         // appBar: AppBar(title: const Text("")),
         body: SafeArea(
-            child: InAppWebView(
+            child:  hasInternet
+      ? InAppWebView(
               key: webViewKey,
               webViewEnvironment: webViewEnvironment,
               initialUrlRequest: URLRequest(url: WebUri(widget.webUrl)),
@@ -109,7 +133,8 @@ FirebaseMessaging.instance.requestPermission();
 
                 return NavigationActionPolicy.ALLOW; // Allow internal links
               },
-            ),
+            )
+                : noInternetScreen(),
                 ),
       ),
     ),
@@ -136,6 +161,29 @@ Future<bool> _onBackPressed() async {
     }
     return Future.value(true); // Exit app
   }
-
+Widget noInternetScreen() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off, size: 100, color: Colors.grey),
+            const SizedBox(height: 20),
+            Text(
+              'No Internet Connection',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Please check your network settings and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
 }
