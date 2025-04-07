@@ -20,7 +20,9 @@ WebViewEnvironment? webViewEnvironment;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   await FirebaseInitializer.initialize();
+  // await FirebaseInitializer.initialize();
 // if (firebaseEnabled && !kIsWeb) {
 //     try {
 //       // Import Firebase only if enabled
