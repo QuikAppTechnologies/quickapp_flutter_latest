@@ -76,11 +76,14 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-        FirebaseMessaging.instance.subscribeToTopic("all");
-    FirebaseMessaging.instance.requestPermission();
+    FirebaseMessaging.instance.getToken().then((token) {
+      print('FCM Token: $token');
+    });
 
-        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-          Fluttertoast.showToast(
+    FirebaseMessaging.instance.subscribeToTopic("all");
+    FirebaseMessaging.instance.requestPermission();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    Fluttertoast.showToast(
               msg: "Notification: ${message.notification?.title}");
         });
 
