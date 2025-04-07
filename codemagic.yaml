@@ -13,6 +13,7 @@ definitions:
         WEB_URL: $WEB_URL
         url: $WEB_URL
         firebase_config_android: $firebase_config_android
+        PKG_NAME: $PKG_NAME
 
   artifacts:
     #- &ipa_file build/ios/ipa/*.ipa
@@ -124,7 +125,15 @@ definitions:
     - &change_bundle_name
       name: Change bundle name
       script: |
-        flutter pub run rename setBundleId  --value "$ORG_NAME.$APP_NAME"
+        # Prefer PKG_NAME if available
+        if [ -n "$PKG_NAME" ]; then
+          PACKAGE_NAME="$PKG_NAME"
+          
+        else
+          PACKAGE_NAME="${CLEANED_ORG_NAME}.${CLEANED_APP_NAME}"
+        fi
+        flutter pub run rename setBundleId  --value "$PACKAGE_NAME"
+        # flutter pub run rename setBundleId  --value "$ORG_NAME.$APP_NAME"
         flutter pub get
 
     - &change_app_name
@@ -160,7 +169,13 @@ definitions:
         CLEANED_APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' _')
 
         # Construct valid package name
-        PACKAGE_NAME="com.${CLEANED_ORG_NAME}.${CLEANED_APP_NAME}"
+        # PACKAGE_NAME="com.${CLEANED_ORG_NAME}.${CLEANED_APP_NAME}"
+        # Prefer PKG_NAME if available
+        if [ -n "$PKG_NAME" ]; then
+        PACKAGE_NAME="$PKG_NAME"
+        else
+          PACKAGE_NAME="${CLEANED_ORG_NAME}.${CLEANED_APP_NAME}"
+        fi
 
         # Validate package name format
         if [[ ! "$PACKAGE_NAME" =~ ^[a-zA-Z_][a-zA-Z0-9]*(\.[a-zA-Z_][a-zA-Z0-9]*)+$ ]]; then

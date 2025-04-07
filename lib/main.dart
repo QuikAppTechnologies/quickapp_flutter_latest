@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart';
 
 bool hasInternet = true;
 
@@ -17,16 +17,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
 
-  try {
-    await Firebase.initializeApp();
-    print("✅ Firebase initialized");
-  } catch (e) {
-    print("⚠️ Firebase initialization skipped or failed: $e");
-  }
+  // try {
+  //   await Firebase.initializeApp();
+  //   print("✅ Firebase initialized");
+  // } catch (e) {
+  //   print("⚠️ Firebase initialization skipped or failed: $e");
+  // }
 
 
   // await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   String webUrl = const String.fromEnvironment('WEB_URL',
       defaultValue: 'https://pixaware.co/');
@@ -34,10 +34,10 @@ void main() async {
   runApp(MyApp(webUrl: webUrl));
 }
 // Handle background messages
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  debugPrint("Handling background message: ${message.messageId}");
-}
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   debugPrint("Handling background message: ${message.messageId}");
+// }
 class MyApp extends StatefulWidget {
   final String webUrl;
   const MyApp({super.key, required this.webUrl});
@@ -66,33 +66,34 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    FirebaseMessaging.instance.subscribeToTopic("all");
-FirebaseMessaging.instance.requestPermission();
+    //     FirebaseMessaging.instance.subscribeToTopic("all");
+    // FirebaseMessaging.instance.requestPermission();
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      Fluttertoast.showToast(
-          msg: "Notification: ${message.notification?.title}");
-    });
+    //     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    //       Fluttertoast.showToast(
+    //           msg: "Notification: ${message.notification?.title}");
+    //     });
 
-      // Internet monitoring
-   Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      _checkInternetConnection();
-    });
+    //       // Internet monitoring
+    //    Connectivity()
+    //         .onConnectivityChanged
+    //         .listen((List<ConnectivityResult> results) {
+    //       _checkInternetConnection();
+    //     });
 
-    _checkInternetConnection(); // Initial check
-  }
+    //     _checkInternetConnection(); // Initial check
+    //   }
 
-  Future<void> _checkInternetConnection() async {
-    final result = await Connectivity().checkConnectivity();
-    final isOnline = result != ConnectivityResult.none;
+    //   Future<void> _checkInternetConnection() async {
+    //     final result = await Connectivity().checkConnectivity();
+    //     final isOnline = result != ConnectivityResult.none;
 
-    if (mounted) {
-      setState(() {
-        hasInternet = isOnline;
-      });
-    }
+    //     if (mounted) {
+    //       setState(() {
+    //         hasInternet = isOnline;
+    //       });
+    //     }
+
     //
     // pullToRefreshController = kIsWeb ||
     //         ![TargetPlatform.iOS, TargetPlatform.android]
