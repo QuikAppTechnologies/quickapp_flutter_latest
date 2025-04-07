@@ -152,12 +152,14 @@ definitions:
     - &build_debug_apk
       name: Build APK
       script: |
-        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
+        # flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
+        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=FIREBASE_ENABLED=${firebase_config_android:+true}
 
     - &build_release_apk
       name: Build APK
       script: |
-        flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
+        # flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
+        flutter build apk --release --dart-define=WEB_URL="$WEB_URL" --dart-define=FIREBASE_ENABLED=${firebase_config_android:+true}
 
     - &update_android_package
       name: Update Android Package Name
