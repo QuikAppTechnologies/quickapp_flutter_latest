@@ -19,13 +19,37 @@ WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase if push notification is enabled
   if (firebaseEnabled && !kIsWeb) {
     await FirebaseInitializer.initialize();
     await FirebaseMessaging.instance.setAutoInitEnabled(true);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } else {
+    debugPrint("🚫 Firebase not enabled via PUSH_NOTIFY.");
   }
+
+  if (firebaseEnabled && !kIsWeb) {
+    FirebaseMessaging.instance.getToken().then((token) {
+      debugPrint('✅ FCM Token: $token');
+    });
+
+    FirebaseMessaging.instance.subscribeToTopic("all");
+    FirebaseMessaging.instance.requestPermission();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      Fluttertoast.showToast(
+          msg: "🔔 Notification: ${message.notification?.title}");
+    });
+  }
+if (firebaseEnabled && !kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
+
+  // Initialize Firebase if push notification is enabled
+  // if (firebaseEnabled && !kIsWeb) {
+  //   await FirebaseInitializer.initialize();
+  //   await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    
+  //   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // }
 
   String webUrl = const String.fromEnvironment(
     'WEB_URL',
