@@ -116,7 +116,7 @@ definitions:
 
           # ✅ Rebuild APK to initialize Firebase and get FCM token
           echo "🚀 Building APK to capture FCM token..."
-          flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY=true > flutter_build.log
+          flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
 
           # ✅ Search FCM token in flutter logs
           echo "🔍 Searching for FCM Token in build logs..."
@@ -187,7 +187,7 @@ definitions:
       script: |
         # flutter build apk --debug --dart-define=WEB_URL="$WEB_URL"
         # flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=FIREBASE_ENABLED=${firebase_config_android:+true}
-        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY=true
+        flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY"
 
 
     - &build_release_apk
@@ -195,7 +195,7 @@ definitions:
       script: |
         # flutter build apk --release --dart-define=WEB_URL="$WEB_URL"
         # flutter build apk --release --dart-define=WEB_URL="$WEB_URL" --dart-define=FIREBASE_ENABLED=${firebase_config_android:+true}
-        flutter build apk --release --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY=true
+        flutter build apk --release --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY"
 
 
     - &update_android_package
