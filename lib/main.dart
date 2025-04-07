@@ -15,34 +15,47 @@ bool hasInternet = true;
 const bool firebaseEnabled =
     bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
 
+    const String webUrl = String.fromEnvironment('WEB_URL');
+const bool pushNotify =
+    bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
+
 WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (firebaseEnabled && !kIsWeb) {
-    await FirebaseInitializer.initialize();
-    await FirebaseMessaging.instance.setAutoInitEnabled(true);
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  } else {
-    debugPrint("🚫 Firebase not enabled via PUSH_NOTIFY.");
-  }
-
-  if (firebaseEnabled && !kIsWeb) {
+  if (pushNotify) {
+    await Firebase.initializeApp();
     FirebaseMessaging.instance.getToken().then((token) {
-      debugPrint('✅ FCM Token: $token');
+      print("FCM Token: $token");
     });
+   if (firebaseEnabled && !kIsWeb) {
+      // await FirebaseInitializer.initialize();
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+    } else {
+      debugPrint("🚫 Firebase not enabled via PUSH_NOTIFY.");
+    }
 
-    FirebaseMessaging.instance.subscribeToTopic("all");
-    FirebaseMessaging.instance.requestPermission();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      Fluttertoast.showToast(
-          msg: "🔔 Notification: ${message.notification?.title}");
-    });
-  }
-if (firebaseEnabled && !kIsWeb) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  }
+    if (firebaseEnabled && !kIsWeb) {
+      FirebaseMessaging.instance.getToken().then((token) {
+        debugPrint('✅ FCM Token: $token');
+      });
 
+      FirebaseMessaging.instance.subscribeToTopic("all");
+      FirebaseMessaging.instance.requestPermission();
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        Fluttertoast.showToast(
+            msg: "🔔 Notification: ${message.notification?.title}");
+      });
+    }
+    if (firebaseEnabled && !kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+    }
+
+  }
+ 
   // Initialize Firebase if push notification is enabled
   // if (firebaseEnabled && !kIsWeb) {
   //   await FirebaseInitializer.initialize();
@@ -51,10 +64,10 @@ if (firebaseEnabled && !kIsWeb) {
   //   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // }
 
-  String webUrl = const String.fromEnvironment(
-    'WEB_URL',
-    defaultValue: 'https://pixaware.co/',
-  );
+  // String webUrl = const String.fromEnvironment(
+  //   'WEB_URL',
+  //   defaultValue: 'https://pixaware.co/',
+  // );
 
   runApp(MyApp(webUrl: webUrl));
 }
