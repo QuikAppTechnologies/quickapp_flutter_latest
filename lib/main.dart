@@ -12,8 +12,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 bool hasInternet = true;
 
-const bool firebaseEnabled =
-    bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
+
 
     const String webUrl = String.fromEnvironment('WEB_URL');
 const bool pushNotify =
@@ -23,38 +22,62 @@ WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (pushNotify) {
+  if (pushNotify && !kIsWeb) {
     await Firebase.initializeApp();
-    FirebaseMessaging.instance.getToken().then((token) {
-      print("FCM Token: $token");
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    messaging.getToken().then((token) {
+      debugPrint("✅ FCM Token: $token");
     });
-   if (firebaseEnabled && !kIsWeb) {
-      // await FirebaseInitializer.initialize();
-      await FirebaseMessaging.instance.setAutoInitEnabled(true);
-      FirebaseMessaging.onBackgroundMessage(
-          _firebaseMessagingBackgroundHandler);
-    } else {
-      debugPrint("🚫 Firebase not enabled via PUSH_NOTIFY.");
-    }
 
-    if (firebaseEnabled && !kIsWeb) {
-      FirebaseMessaging.instance.getToken().then((token) {
-        debugPrint('✅ FCM Token: $token');
-      });
+    await messaging.setAutoInitEnabled(true);
+    await messaging.requestPermission();
 
-      FirebaseMessaging.instance.subscribeToTopic("all");
-      FirebaseMessaging.instance.requestPermission();
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        Fluttertoast.showToast(
-            msg: "🔔 Notification: ${message.notification?.title}");
-      });
-    }
-    if (firebaseEnabled && !kIsWeb) {
-      FirebaseMessaging.onBackgroundMessage(
-          _firebaseMessagingBackgroundHandler);
-    }
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      Fluttertoast.showToast(
+          msg: "🔔 Notification: ${message.notification?.title}");
+    });
 
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    await messaging.subscribeToTopic("all");
+  } else {
+    debugPrint(
+        "🚫 Firebase not initialized (pushNotify: $pushNotify, isWeb: $kIsWeb)");
   }
+  
+  // if (pushNotify) {
+  //   await Firebase.initializeApp();
+  //   FirebaseMessaging.instance.getToken().then((token) {
+  //     print("FCM Token: $token");
+  //   });
+  //  if (firebaseEnabled && !kIsWeb) {
+  //     // await FirebaseInitializer.initialize();
+  //     await FirebaseMessaging.instance.setAutoInitEnabled(true);
+  //     FirebaseMessaging.onBackgroundMessage(
+  //         _firebaseMessagingBackgroundHandler);
+  //   } else {
+  //     debugPrint("🚫 Firebase not enabled via PUSH_NOTIFY.");
+  //   }
+
+  //   if (firebaseEnabled && !kIsWeb) {
+  //     FirebaseMessaging.instance.getToken().then((token) {
+  //       debugPrint('✅ FCM Token: $token');
+  //     });
+
+  //     FirebaseMessaging.instance.subscribeToTopic("all");
+  //     FirebaseMessaging.instance.requestPermission();
+  //     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //       Fluttertoast.showToast(
+  //           msg: "🔔 Notification: ${message.notification?.title}");
+  //     });
+  //   }
+  //   if (firebaseEnabled && !kIsWeb) {
+  //     FirebaseMessaging.onBackgroundMessage(
+  //         _firebaseMessagingBackgroundHandler);
+  //   }
+
+  // }
  
   // Initialize Firebase if push notification is enabled
   // if (firebaseEnabled && !kIsWeb) {
@@ -107,7 +130,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    if (firebaseEnabled) {
+    if (pushNotify) {
       FirebaseMessaging.instance.getToken().then((token) {
         debugPrint('✅ FCM Token: $token');
       });
