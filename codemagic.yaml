@@ -14,6 +14,8 @@ definitions:
         url: $WEB_URL
         firebase_config_android: $firebase_config_android
         PKG_NAME: $PKG_NAME
+        EMAIL_ID: $EMAIL_ID
+        PUSH_NOTIFY: $PUSH_NOTIFY
 
   artifacts:
     #- &ipa_file build/ios/ipa/*.ipa
@@ -28,7 +30,7 @@ definitions:
   email_release: &email_release
     email:
       recipients:
-        - prasannasrie@gmail.com
+        - $EMAIL_ID
         # - thamaraikannan137@gmail.com
       notify:
         success: true
@@ -96,6 +98,94 @@ definitions:
 
         flutter pub get
 
+
+    - &Extract_FCM_Token
+      name: Extract FCM Token (from logs)
+      script: |
+        if [ "$PUSH_NOTIFY" = "true" ]; then
+          echo "📦 Adding Firebase plugin to build.gradle files..."
+
+          # Ensure 'com.google.gms.google-services' plugin is applied
+          if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
+            echo "Applying Firebase plugin in app/build.gradle..."
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+          fi
+
+          # Ensure Firebase classpath is present in project-level build.gradle
+          if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+            echo "Adding Firebase classpath to project build.gradle..."
+            sed -i '/dependencies {/a\
+              classpath '\''com.google.gms:google-services:4.3.15'\''\
+            ' android/build.gradle
+          fi
+
+          echo "✅ Firebase setup complete."
+
+          echo "📥 Downloading google-services.json"
+          curl -o android/app/google-services.json "$firebase_config_android"
+
+          echo "📦 Building app to extract FCM token..."
+          flutter build apk > flutter_build.log
+
+          echo "🔍 Extracting FCM Token from logs..."
+          FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
+
+          if [ -n "$FCM_TOKEN" ]; then
+            echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
+
+            echo "📧 Sending FCM token to $EMAIL_ID"
+            curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
+              --mail-from "$EMAIL_ID" \
+              --mail-rcpt "$EMAIL_ID" \
+              --upload-file fcm_token.txt \
+              --user "$EMAIL_ID:$EMAIL_PASSWORD" \
+              --insecure
+          else
+            echo "⚠️ FCM Token not found in logs!"
+          fi
+        else
+          echo "🚫 Skipping Firebase config"
+        fi
+
+
+    # - &Extract_FCM_Token
+    #   name: Extract FCM Token (from logs)
+    #   script: |
+    #       if [ "$PUSH_NOTIFY" = "true" ]; then
+    #        echo "📦 Adding Firebase plugin to build.gradle files..."
+
+    #       # Ensure 'com.google.gms.google-services' plugin is applied
+    #       if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
+    #         echo "Applying Firebase plugin in app/build.gradle..."
+    #         echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+    #       fi
+
+    #       # Ensure Firebase classpath is present in project-level build.gradle
+    #       if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+    #         echo "Adding Firebase classpath to project build.gradle..."
+    #         sed -i '' '/dependencies {/a\
+    #           classpath '\''com.google.gms:google-services:4.3.15'\''\
+    #         ' android/build.gradle
+    #       fi
+
+    #         echo "✅ Firebase setup complete."
+    #         echo "📥 Downloading google-services.json"
+    #         curl -o android/app/google-services.json $firebase_config_android
+    #         FCM_TOKEN=$(grep 'FCM Token:' build/app/outputs/flutter-apk/app-release.apk.log | awk '{print $NF}')
+    #         echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
+    #         if [ "$PUSH_NOTIFY" = "true" ] && [ -f fcm_token.txt ]; then
+    #         curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
+    #           --mail-from "your_email@gmail.com" \
+    #           --mail-rcpt "$EMAIL_RECEIVER" \
+    #           --upload-file fcm_token.txt \
+    #           --user "your_email@gmail.com:$EMAIL_PASSWORD" \
+    #           --insecure
+    #         fi
+
+
+    #       else
+    #         echo "🚫 Skipping Firebase config"
+    #       fi
 
     - &get_logo
       name: Get logo image from logoUrl
@@ -215,6 +305,7 @@ workflows:
       - *set_splash_icons
       - *change_bundle_name
       - *change_app_name
+      - *Extract_FCM_Token
       - *build_release_apk
       #        - *google_json
       #        - *build_abb
@@ -240,6 +331,7 @@ workflows:
       - *set_splash_icons
       - *change_bundle_name
       - *change_app_name
+      - *Extract_FCM_Token
       - *build_release_apk
 #     - *build_abb
 #     - *build_debug_apk
