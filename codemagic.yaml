@@ -51,57 +51,16 @@ definitions:
         echo "WEB_URL: $WEB_URL"
         echo "SPLASH: $SPLASH"
         echo "firebase_config_android: $firebase_config_android"
+        echo "PKG_NAME: $PKG_NAME"
+        echo "EMAIL_ID: $EMAIL_ID"
+        echo "PUSH_NOTIFY: $PUSH_NOTIFY"
+        echo "EMAIL_PASSWORD: $EMAIL_PASSWORD"
+  
 
-    # - &google_json
-    #   name: Get firebase config for android from Url
-    #   script: |
-    #     wget -O android/app/google-services.json $firebase_config_android
-    #     cat android/app/google-services.json
-    #     flutter pub get
-
-    # - &google_json
-    #   name: Firebase Setup (Conditional)
-    #   script: |
-    #     USE_FIREBASE=false
-
-    #     if [ -n "$firebase_config_android" ]; then
-    #       echo "🔧 firebase_config_android detected. Configuring Firebase..."
-
-    #       # Download google-services.json
-    #       wget -O android/app/google-services.json "$firebase_config_android"
-    #       echo "✔ google-services.json downloaded."
-
-    #       USE_FIREBASE=true
-    #     else
-    #       echo "⚠️ firebase_config_android URL not provided. Skipping Firebase setup."
-    #     fi
-
-    #     # Conditionally modify Gradle files
-    #     if [ "$USE_FIREBASE" = true ]; then
-    #       echo "📦 Adding Firebase plugin to build.gradle files..."
-
-    #       # Ensure 'com.google.gms.google-services' plugin is applied
-    #       if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
-    #         echo "Applying Firebase plugin in app/build.gradle..."
-    #         echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-    #       fi
-
-    #       # Ensure Firebase classpath is present in project-level build.gradle
-    #       if ! grep -q "com.google.gms:google-services" android/build.gradle; then
-    #         echo "Adding Firebase classpath to project build.gradle..."
-    #         sed -i '' '/dependencies {/a\
-    #           classpath '\''com.google.gms:google-services:4.3.15'\''\
-    #         ' android/build.gradle
-    #       fi
-
-    #       echo "✅ Firebase setup complete."
-    #     fi
-
-    #     flutter pub get
-
+  
 
     - &Extract_FCM_Token
-      name: Extract FCM Token (from logs)
+      name: Install Firebase and Push Notification
       script: |
         if [ "$PUSH_NOTIFY" = "true" ]; then
           echo "📦 Adding Firebase plugin to build.gradle files..."
@@ -153,46 +112,7 @@ definitions:
         else
           echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
         fi
-
-
-    # - &Extract_FCM_Token
-    #   name: Extract FCM Token (from logs)
-    #   script: |
-    #       if [ "$PUSH_NOTIFY" = "true" ]; then
-    #        echo "📦 Adding Firebase plugin to build.gradle files..."
-
-    #       # Ensure 'com.google.gms.google-services' plugin is applied
-    #       if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
-    #         echo "Applying Firebase plugin in app/build.gradle..."
-    #         echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-    #       fi
-
-    #       # Ensure Firebase classpath is present in project-level build.gradle
-    #       if ! grep -q "com.google.gms:google-services" android/build.gradle; then
-    #         echo "Adding Firebase classpath to project build.gradle..."
-    #         sed -i '' '/dependencies {/a\
-    #           classpath '\''com.google.gms:google-services:4.3.15'\''\
-    #         ' android/build.gradle
-    #       fi
-
-    #         echo "✅ Firebase setup complete."
-    #         echo "📥 Downloading google-services.json"
-    #         curl -o android/app/google-services.json $firebase_config_android
-    #         FCM_TOKEN=$(grep 'FCM Token:' build/app/outputs/flutter-apk/app-release.apk.log | awk '{print $NF}')
-    #         echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
-    #         if [ "$PUSH_NOTIFY" = "true" ] && [ -f fcm_token.txt ]; then
-    #         curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
-    #           --mail-from "your_email@gmail.com" \
-    #           --mail-rcpt "$EMAIL_RECEIVER" \
-    #           --upload-file fcm_token.txt \
-    #           --user "your_email@gmail.com:$EMAIL_PASSWORD" \
-    #           --insecure
-    #         fi
-
-
-    #       else
-    #         echo "🚫 Skipping Firebase config"
-    #       fi
+  
 
     - &get_logo
       name: Get logo image from logoUrl
@@ -219,19 +139,6 @@ definitions:
         flutter pub run flutter_native_splash:create
         flutter pub get
 
-    - &change_bundle_name
-      name: Change bundle name
-      script: |
-        # Prefer PKG_NAME if available
-        if [ -n "$PKG_NAME" ]; then
-          PACKAGE_NAME="$PKG_NAME"
-          
-        else
-          PACKAGE_NAME="${CLEANED_ORG_NAME}.${CLEANED_APP_NAME}"
-        fi
-        flutter pub run rename setBundleId  --value "$PACKAGE_NAME"
-        # flutter pub run rename setBundleId  --value "$ORG_NAME.$APP_NAME"
-        flutter pub get
 
     - &change_app_name
       name: Change app name
@@ -288,6 +195,8 @@ definitions:
 
         echo "✔ Package name: $PACKAGE_NAME"
 
+        flutter pub run rename setBundleId  --value "$PACKAGE_NAME"
+
         # Update AndroidManifest.xml
         sed -i '' "s/package=\"[^\"]*\"/package=\"$PACKAGE_NAME\"/g" android/app/src/main/AndroidManifest.xml
 
@@ -308,17 +217,14 @@ workflows:
     scripts:
       - *pub_get
       - *debug_env
-      - *update_android_package  # Added package update script here
-      # - *google_json
+      - *update_android_package  
       - *get_logo
       - *set_launcher_icons
       - *get_splash
       - *set_splash_icons
-      - *change_bundle_name
       - *change_app_name
       - *Extract_FCM_Token
       - *build_release_apk
-      #        - *google_json
       #        - *build_abb
       - *build_debug_apk
     artifacts:
@@ -334,13 +240,11 @@ workflows:
     scripts:
       - *pub_get
       - *debug_env
-      - *update_android_package  # Added package update script here
-      # - *google_json
+      - *update_android_package  
       - *get_logo
       - *set_launcher_icons
       - *get_splash
       - *set_splash_icons
-      - *change_bundle_name
       - *change_app_name
       - *Extract_FCM_Token
       - *build_release_apk
