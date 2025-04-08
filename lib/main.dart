@@ -55,17 +55,22 @@ void main() async {
   //   } catch (e, s) {
   //     debugPrint("🔥 Firebase init failed: $e\n$s");
   //   }
+try {
+  await Firebase.initializeApp();
 
-await Firebase.initializeApp(
-      options: FirebaseOptions(
-        apiKey: firebaseApiKey,
-        appId: firebaseAppId,
-        messagingSenderId: firebaseMessagingSenderId,
-        projectId: firebaseProjectId,
-        storageBucket: firebaseStorageBucket,
-      ),
-    );
-    // await Firebase.initializeApp();
+    } catch (e, s) {
+      await Firebase.initializeApp(
+        options: FirebaseOptions(
+          apiKey: firebaseApiKey,
+          appId: firebaseAppId,
+          messagingSenderId: firebaseMessagingSenderId,
+          projectId: firebaseProjectId,
+          storageBucket: firebaseStorageBucket,
+        ),
+      );
+      debugPrint("🔥 Firebase init failed: $e\n$s");
+    }
+    
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
     messaging.getToken().then((token) {
