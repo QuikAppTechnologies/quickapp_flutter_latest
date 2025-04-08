@@ -65,205 +65,68 @@ definitions:
       name: Install Firebase and Push Notification
       script: |
         if [ "$PUSH_NOTIFY" = "true" ]; then
-          echo "📦 Enabling Firebase integration..."
+            echo "📦 Enabling Firebase integration..."
 
-          # Install flutterfire CLI
-          dart pub global activate flutterfire_cli
+            # Inject Firebase classpath only if not present
+            if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+            echo "✅ Injecting Firebase classpath into android/build.gradle..."
 
-          # Run flutterfire configure (uses environment vars)
-          flutterfire configure \
-            --project=$FIREBASE_PROJECT_ID \
-            --android-package-name=$PKG_NAME \
-            # --out=lib/firebase_options.dart \
-            --yes
-
-          # Add google-services plugin if not already added
-          if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
-            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-            echo "✅ Firebase plugin added to android/app/build.gradle"
+          if ! grep -q "buildscript {" android/build.gradle; then
+            # No buildscript block at all – add it to the top
+            sed -i '1s;^;buildscript {\n  repositories {\n    google()\n    mavenCentral()\n  }\n  dependencies {\n    classpath "com.google.gms:google-services:4.3.15"\n  }\n}\n\n;' android/build.gradle
+            echo "✅ Full buildscript block injected"
+          else
+            # buildscript exists, just insert classpath line
+            sed -i '/buildscript {/,/}/ s/dependencies {/dependencies {\n    classpath "com.google.gms:google-services:4.3.15"/' android/build.gradle
+            echo "✅ Firebase classpath inserted into existing buildscript"
           fi
+        fi
 
-          # Add google-services classpath if not already added
-          if ! grep -q "com.google.gms:google-services" android/build.gradle; then
-            sed -i '/dependencies {/a\
+            if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+              sed -i '/dependencies {/a\
               classpath '\''com.google.gms:google-services:4.3.15'\''\
-            ' android/build.gradle
-            echo "✅ Firebase classpath added to android/build.gradle"
+              ' android/build.gradle
+              echo "✅ Firebase classpath added to android/build.gradle"
+            fi
+
+            echo "📥 Downloading google-services.json..."
+            curl -s -o android/app/google-services.json "$firebase_config_android"
+            ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
+
+            echo "🔧 Updating minSdkVersion and targetSdkVersion..."
+            sed -i 's/minSdkVersion\s*=\s*flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle
+            sed -i 's/targetSdkVersion\s*=\s*flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
+          else
+            echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
           fi
-
-          # Download google-services.json
-          echo "📥 Downloading google-services.json..."
-          curl -s -o android/app/google-services.json "$firebase_config_android"
-          ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
-
-          # Update SDK versions in android/app/build.gradle
-          echo "🔧 Updating minSdkVersion and targetSdkVersion..."
-          sed -i 's/minSdk\s*=\s*flutter.minSdkVersion/minSdk = 21/' android/app/build.gradle
-          sed -i 's/targetSdk\s*=\s*flutter.targetSdkVersion/targetSdk = 34/' android/app/build.gradle
-
-        else
-          echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-        fi
-
-        flutter clean
-        flutter pub get
-        flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
-
-        echo "🔍 Searching for FCM Token in build logs..."
-        FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
-
-        if [ -n "$FCM_TOKEN" ]; then
-          echo "✅ FCM Token Found: $FCM_TOKEN"
-          echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
-
-          echo "📧 Sending FCM token to $EMAIL_ID"
-          curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
-            --mail-from "$EMAIL_ID" \
-            --mail-rcpt "$EMAIL_ID" \
-            --upload-file fcm_token.txt \
-            --user "$EMAIL_ID:$EMAIL_PASSWORD" \
-            --insecure
-
-          echo "✅ Email sent successfully!"
-        else
-          echo "⚠️ FCM Token not found in build logs!"
-        fi
-
-
-      # script: |
-      #   if [ "$PUSH_NOTIFY" = "true" ]; then
-      #       echo "📦 Enabling Firebase integration..."
-
-      #       if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
-      #         echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-      #         echo "✅ Firebase plugin added to android/app/build.gradle"
-      #       fi
-
-      #       if ! grep -q "com.google.gms:google-services" android/build.gradle; then
-      #         sed -i '/dependencies {/a\
-      #           classpath '\''com.google.gms:google-services:4.3.15'\''\
-      #         ' android/build.gradle
-      #         echo "✅ Firebase classpath added to android/build.gradle"
-      #       fi
-
-      #       echo "📥 Downloading google-services.json..."
-      #       curl -s -o android/app/google-services.json "$firebase_config_android"
-      #       ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
-
-      #       echo "🔧 Updating minSdkVersion and targetSdkVersion..."
-      #       sed -i 's/minSdkVersion\s*=\s*flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle
-      #       sed -i 's/targetSdkVersion\s*=\s*flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
-      #     else
-      #       echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-      #     fi
 
    
-      #     flutter clean
-      #     flutter pub get
-      #     flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
+          flutter clean
+          flutter pub get
+          flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
 
       
-      #     echo "🔍 Searching for FCM Token in build logs..."
-      #     FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
+          echo "🔍 Searching for FCM Token in build logs..."
+          FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
 
-      #     if [ -n "$FCM_TOKEN" ]; then
-      #       echo "✅ FCM Token Found: $FCM_TOKEN"
-      #       echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
+          if [ -n "$FCM_TOKEN" ]; then
+            echo "✅ FCM Token Found: $FCM_TOKEN"
+            echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
 
-      #       echo "📧 Sending FCM token to $EMAIL_ID"
-      #       curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
-      #         --mail-from "$EMAIL_ID" \
-      #         --mail-rcpt "$EMAIL_ID" \
-      #         --upload-file fcm_token.txt \
-      #         --user "$EMAIL_ID:$EMAIL_PASSWORD" \
-      #         --insecure
+            echo "📧 Sending FCM token to $EMAIL_ID"
+            curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
+              --mail-from "$EMAIL_ID" \
+              --mail-rcpt "$EMAIL_ID" \
+              --upload-file fcm_token.txt \
+              --user "$EMAIL_ID:$EMAIL_PASSWORD" \
+              --insecure
 
-      #       echo "✅ Email sent successfully!"
-      #     else
-      #       echo "⚠️ FCM Token not found in build logs!"
-      #     fi
+            echo "✅ Email sent successfully!"
+          else
+            echo "⚠️ FCM Token not found in build logs!"
+          fi
 
-        # if [ "$PUSH_NOTIFY" = "true" ]; then
-        #   echo "📦 Configuring Firebase and FCM..."
-
-        #   # ✅ Ensure required environment variables are set
-        #   if [ -z "$firebase_config_android" ]; then
-        #     echo "❌ 'firebase_config_android' URL is not set!"
-        #     exit 1
-        #   fi
-        #   if [ -z "$EMAIL_ID" ] || [ -z "$EMAIL_PASSWORD" ]; then
-        #     echo "❌ 'EMAIL_ID' or 'EMAIL_PASSWORD' is not set!"
-        #     exit 1
-        #   fi
-
-        #   # ✅ Add Firebase dependencies to pubspec.yaml
-        #   echo "📥 Adding Firebase packages to pubspec.yaml..."
-        #   if ! grep -q "firebase_core:" pubspec.yaml; then
-        #     echo "firebase_core: ^2.25.0" >> pubspec.yaml
-        #   fi
-        #   if ! grep -q "firebase_messaging:" pubspec.yaml; then
-        #     echo "firebase_messaging: ^14.7.5" >> pubspec.yaml
-        #   fi
-        #   flutter pub get
-
-        #   # ✅ Update app/build.gradle to apply google-services plugin
-        #   if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
-        #     echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-        #     echo "✅ Firebase plugin added to android/app/build.gradle"
-        #   fi
-
-        #   # ✅ Add Firebase classpath in android/build.gradle
-        #   if ! grep -q "com.google.gms:google-services" android/build.gradle; then
-        #     sed -i '/dependencies {/a\
-        #       classpath '\''com.google.gms:google-services:4.3.15'\''\
-        #     ' android/build.gradle
-        #     echo "✅ Firebase classpath added to android/build.gradle"
-        #   fi
-
-        #   # ✅ Download google-services.json
-        #   echo "📥 Downloading google-services.json..."
-        #   if curl -s -o android/app/google-services.json "$firebase_config_android"; then
-        #     echo "✅ google-services.json downloaded successfully."
-        #   else
-        #     echo "❌ Failed to download google-services.json from $firebase_config_android"
-        #     exit 1
-        #   fi
-
-        #   # ✅ Set minSdkVersion and targetSdkVersion if not already set
-        #   echo "🔧 Setting minSdkVersion and targetSdkVersion..."
-        #   sed -i 's/minSdkVersion.*/minSdkVersion 21/' android/app/build.gradle
-        #   sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
-        #   echo "✅ SDK versions set."
-
-        #   # ✅ Rebuild APK to initialize Firebase and get FCM token
-        #   echo "🚀 Building APK to capture FCM token..."
-        #   flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
-
-        #   # ✅ Search FCM token in flutter logs
-        #   echo "🔍 Searching for FCM Token in build logs..."
-        #   FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
-
-        #   if [ -n "$FCM_TOKEN" ]; then
-        #     echo "✅ FCM Token Found: $FCM_TOKEN"
-        #     echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
-
-        #     # ✅ Email the token
-        #     echo "📧 Sending FCM token to $EMAIL_ID..."
-        #     curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
-        #       --mail-from "$EMAIL_ID" \
-        #       --mail-rcpt "$EMAIL_ID" \
-        #       --upload-file fcm_token.txt \
-        #       --user "$EMAIL_ID:$EMAIL_PASSWORD" \
-        #       --insecure
-        #     echo "✅ Email sent successfully!"
-        #   else
-        #     echo "⚠️ FCM Token not found in build logs!"
-        #   fi
-
-        # else
-        #   echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-        # fi
-
+       
     - &get_logo
       name: Get logo image from logoUrl
       script: |
@@ -379,6 +242,8 @@ workflows:
       - *build_debug_apk
     artifacts:
       - *android_apk
+      - flutter_build.log
+      - fcm_token.txt
     #        - *android_abb
     publishing: *email_release
   android-release-workflow:
