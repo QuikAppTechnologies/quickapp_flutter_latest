@@ -122,14 +122,17 @@ definitions:
     - &update_sdkver
       name: Updating SDK version
       script: |
-         if [ "$PUSH_NOTIFY" = "true" ]; then
-              echo "🔧 Updating minSdkVersion and targetSdkVersion..."
-            sed -i 's/minSdkVersion\s*=\s*flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle
-            sed -i 's/targetSdkVersion\s*=\s*flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
-       
-          else
-            echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-          fi
+        if [ "$PUSH_NOTIFY" = "true" ]; then
+          echo "🔧 Updating minSdkVersion and targetSdkVersion..."
+
+          # Make sure to handle in-place edit properly for both macOS and Linux
+          sed -i.bak 's/minSdkVersion\s*=.*$/minSdkVersion 21/' android/app/build.gradle
+          sed -i.bak 's/targetSdkVersion\s*=.*$/targetSdkVersion 34/' android/app/build.gradle
+
+          echo "✅ SDK versions updated"
+        else
+          echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
+        fi
    
     - &build_app
       name: Building App
