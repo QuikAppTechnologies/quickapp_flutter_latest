@@ -39,6 +39,7 @@ void main() async {
       InitializationSettings(android: initializationSettingsAndroid);
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  debugPrint("Push Notify: $pushNotify \n FIREBASE_PROJECT_ID: $firebaseProjectId \n FIREBASE_MESSAGING_SENDER_ID: $firebaseMessagingSenderId");
   if (pushNotify == true) {
   
   // try {
@@ -162,6 +163,29 @@ class _MyAppState extends State<MyApp> {
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         Fluttertoast.showToast(
             msg: "🔔 Notification: ${message.notification?.title}");
+            final notification = message.notification;
+        final android = message.notification?.android;
+
+        if (notification != null && android != null) {
+          Fluttertoast.showToast(
+              msg: "🔔 Notification: ${message.notification?.title}");
+          flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                'default_channel', // channel ID
+                'Default', // channel name
+                channelDescription: 'Default notification channel',
+                importance: Importance.max,
+                priority: Priority.high,
+                playSound: true,
+                icon: '@mipmap/ic_launcher',
+              ),
+            ),
+          );
+        }
       });
     }
 
