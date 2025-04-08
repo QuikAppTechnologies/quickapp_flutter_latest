@@ -8,13 +8,22 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 bool hasInternet = true;
 
 
-
-    const String webUrl = String.fromEnvironment('WEB_URL');
+const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+const String firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+const String firebaseMessagingSenderId =
+    String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+const String firebaseStorageBucket =
+    String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+const String webUrl = String.fromEnvironment('WEB_URL');
 const bool pushNotify =
     bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
 
@@ -22,18 +31,26 @@ WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    // Android settings for local notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher'); // your app icon
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   if (pushNotify == true) {
     // await Firebase.initializeApp(
     //   options: DefaultFirebaseOptions.currentPlatform,
     // );
 
 await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: "AIzaSyBo-ihJ0vVkZJZeP2j5YPmXrdfxHSh9_C0",
-        appId: "1:68101928519:android:091e10cf76e417abf9a362",
-        messagingSenderId: "68101928519",
-        projectId: "pixawaretest",
-        storageBucket: "pixawaretest.firebasestorage.app",
+      options: FirebaseOptions(
+        apiKey: firebaseApiKey,
+        appId: firebaseAppId,
+        messagingSenderId: firebaseMessagingSenderId,
+        projectId: firebaseProjectId,
+        storageBucket: firebaseStorageBucket,
       ),
     );
     // await Firebase.initializeApp();
@@ -46,10 +63,35 @@ await Firebase.initializeApp(
     await messaging.setAutoInitEnabled(true);
     await messaging.requestPermission();
 
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      Fluttertoast.showToast(
-          msg: "🔔 Notification: ${message.notification?.title}");
+      final notification = message.notification;
+      final android = message.notification?.android;
+
+      if (notification != null && android != null) {
+        Fluttertoast.showToast(
+            msg: "🔔 Notification: ${message.notification?.title}");
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'default_channel', // channel ID
+              'Default', // channel name
+              channelDescription: 'Default notification channel',
+              importance: Importance.max,
+              priority: Priority.high,
+              playSound: true,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
     });
+    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      
+    // });
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 

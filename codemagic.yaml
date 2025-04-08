@@ -93,6 +93,13 @@ definitions:
             curl -s -o android/app/google-services.json "$firebase_config_android"
             ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
 
+            API_KEY=$(jq -r '.client[0].api_key[0].current_key' $firebase_config_android)
+            APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' $firebase_config_android)
+            PROJECT_ID=$(jq -r '.project_info.project_id' $firebase_config_android)
+            MESSAGING_SENDER_ID=$(jq -r '.project_info.project_number' $firebase_config_android)
+            STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' $firebase_config_android)
+            echo "Building with extracted Firebase config..."
+
             echo "🔧 Updating minSdkVersion and targetSdkVersion..."
             sed -i 's/minSdkVersion\s*=\s*flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle
             sed -i 's/targetSdkVersion\s*=\s*flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
@@ -103,7 +110,15 @@ definitions:
    
           flutter clean
           flutter pub get
-          flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
+          flutter build apk 
+            --debug 
+            --dart-define=WEB_URL="$WEB_URL"\
+            --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY"\
+            --dart-define=FIREBASE_API_KEY=$API_KEY \
+            --dart-define=FIREBASE_APP_ID=$APP_ID \
+            --dart-define=FIREBASE_PROJECT_ID=$PROJECT_ID \
+            --dart-define=FIREBASE_MESSAGING_SENDER_ID=$MESSAGING_SENDER_ID \
+            --dart-define=FIREBASE_STORAGE_BUCKET=$STORAGE_BUCKET > flutter_build.log
 
       
           echo "🔍 Searching for FCM Token in build logs..."
