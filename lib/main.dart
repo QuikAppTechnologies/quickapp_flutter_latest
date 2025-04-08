@@ -56,10 +56,8 @@ void main() async {
   //     debugPrint("🔥 Firebase init failed: $e\n$s");
   //   }
 try {
-  await Firebase.initializeApp();
-
-    } catch (e, s) {
-      await Firebase.initializeApp(
+  // await Firebase.initializeApp();
+  await Firebase.initializeApp(
         options: FirebaseOptions(
           apiKey: firebaseApiKey,
           appId: firebaseAppId,
@@ -68,6 +66,8 @@ try {
           storageBucket: firebaseStorageBucket,
         ),
       );
+    } catch (e, s) {
+      
       debugPrint("🔥 Firebase init failed: $e\n$s");
     }
     
