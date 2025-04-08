@@ -9,26 +9,46 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 bool hasInternet = true;
 
+Future<FirebaseOptions> loadFirebaseOptionsFromJson() async {
+  final jsonStr = await rootBundle.loadString('assets/google-services.json');
+  final jsonMap = json.decode(jsonStr);
 
+  final client = jsonMap['client'][0];
+  final apiKey = client['api_key'][0]['current_key'];
+  final projectId = jsonMap['project_info']['project_id'];
+  final appId = client['client_info']['mobilesdk_app_id'];
+  final senderId = jsonMap['project_info']['project_number'];
+  final storageBucket = jsonMap['project_info']['storage_bucket'];
+
+  return FirebaseOptions(
+    apiKey: apiKey,
+    appId: appId,
+    messagingSenderId: senderId,
+    projectId: projectId,
+    storageBucket: storageBucket,
+  );
+}
 
 
 WebViewEnvironment? webViewEnvironment;
 
 void main() async {
-  const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
-  const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
-  const String firebaseProjectId =
-      String.fromEnvironment('FIREBASE_PROJECT_ID');
-  const String firebaseMessagingSenderId =
-      String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
-  const String firebaseStorageBucket =
-      String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+  // const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  // const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+  // const String firebaseProjectId =
+  //     String.fromEnvironment('FIREBASE_PROJECT_ID');
+  // const String firebaseMessagingSenderId =
+  //     String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+  // const String firebaseStorageBucket =
+  //     String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
   const String webUrl = String.fromEnvironment('WEB_URL');
   const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
 // const pushNotify = String.fromEnvironment('PUSH_NOTIFY', defaultValue: 'false').toLowerCase() == 'true';
@@ -41,9 +61,11 @@ void main() async {
       InitializationSettings(android: initializationSettingsAndroid);
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  debugPrint("Push Notify: $pushNotify \n FIREBASE_PROJECT_ID: $firebaseProjectId \n FIREBASE_MESSAGING_SENDER_ID: $firebaseMessagingSenderId");
+  debugPrint("Push Notify: $pushNotify \n WEBURL: $webUrl \n");
   if (pushNotify == true) {
-  
+  await Firebase.initializeApp(
+      options: await loadFirebaseOptionsFromJson(),
+    );
   // try {
   //     await Firebase.initializeApp(
   //       options: const FirebaseOptions(
@@ -57,21 +79,21 @@ void main() async {
   //   } catch (e, s) {
   //     debugPrint("🔥 Firebase init failed: $e\n$s");
   //   }
-try {
+// try {
   // await Firebase.initializeApp();
-  await Firebase.initializeApp(
-        options: FirebaseOptions(
-          apiKey: firebaseApiKey,
-          appId: firebaseAppId,
-          messagingSenderId: firebaseMessagingSenderId,
-          projectId: firebaseProjectId,
-          storageBucket: firebaseStorageBucket,
-        ),
-      );
-    } catch (e, s) {
+  // await Firebase.initializeApp(
+  //       options: FirebaseOptions(
+  //         apiKey: firebaseApiKey,
+  //         appId: firebaseAppId,
+  //         messagingSenderId: firebaseMessagingSenderId,
+  //         projectId: firebaseProjectId,
+  //         storageBucket: firebaseStorageBucket,
+  //       ),
+  //     );
+    // } catch (e, s) {
       
-      debugPrint("🔥 Firebase init failed: $e\n$s");
-    }
+    //   debugPrint("🔥 Firebase init failed: $e\n$s");
+    // }
     
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
