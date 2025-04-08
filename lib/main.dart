@@ -18,7 +18,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 bool hasInternet = true;
 
 Future<FirebaseOptions> loadFirebaseOptionsFromJson() async {
-  final jsonStr = await rootBundle.loadString('assets/google-services.json');
+  final jsonStr = await rootBundle.loadString('android/app/google-services.json');
   final jsonMap = json.decode(jsonStr);
 
   final client = jsonMap['client'][0];
