@@ -41,29 +41,29 @@ void main() async {
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   if (pushNotify == true) {
   
-  try {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyBo-ihJ0vVkZJZeP2j5YPmXrdfxHSh9_C0",
-          appId: "1:68101928519:android:091e10cf76e417abf9a362",
-          messagingSenderId: "68101928519",
-          projectId: "pixawaretest",
-          storageBucket: "pixawaretest.firebasestorage.app",
-        ),
-      );
-    } catch (e, s) {
-      debugPrint("🔥 Firebase init failed: $e\n$s");
-    }
+  // try {
+  //     await Firebase.initializeApp(
+  //       options: const FirebaseOptions(
+  //         apiKey: "AIzaSyBo-ihJ0vVkZJZeP2j5YPmXrdfxHSh9_C0",
+  //         appId: "1:68101928519:android:091e10cf76e417abf9a362",
+  //         messagingSenderId: "68101928519",
+  //         projectId: "pixawaretest",
+  //         storageBucket: "pixawaretest.firebasestorage.app",
+  //       ),
+  //     );
+  //   } catch (e, s) {
+  //     debugPrint("🔥 Firebase init failed: $e\n$s");
+  //   }
 
-// await Firebase.initializeApp(
-//       options: FirebaseOptions(
-//         apiKey: firebaseApiKey,
-//         appId: firebaseAppId,
-//         messagingSenderId: firebaseMessagingSenderId,
-//         projectId: firebaseProjectId,
-//         storageBucket: firebaseStorageBucket,
-//       ),
-//     );
+await Firebase.initializeApp(
+      options: FirebaseOptions(
+        apiKey: firebaseApiKey,
+        appId: firebaseAppId,
+        messagingSenderId: firebaseMessagingSenderId,
+        projectId: firebaseProjectId,
+        storageBucket: firebaseStorageBucket,
+      ),
+    );
     // await Firebase.initializeApp();
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 

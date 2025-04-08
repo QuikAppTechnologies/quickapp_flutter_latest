@@ -90,7 +90,7 @@ definitions:
             fi
 
             echo "📥 Downloading google-services.json..."
-            curl -s -o android/app/google-services.json "$firebase_config_android"
+            wget -O android/app/google-services.json "$firebase_config_android"
             ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
 
             API_KEY=$(jq -r '.client[0].api_key[0].current_key' $firebase_config_android)
