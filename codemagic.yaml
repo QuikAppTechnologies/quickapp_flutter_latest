@@ -100,51 +100,69 @@ definitions:
         else
           echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
         fi
-        
+
     - &read_json
-      name: Read JSON file
-      script: |
-         if [ "$PUSH_NOTIFY" = "true" ]; then
-          echo "📖 Reading google-services.json..."
+          name: Read JSON file
+          script: |
+            if [ "$PUSH_NOTIFY" = "true" ]; then
+              echo "📖 Reading google-services.json..."
+              apt-get update && apt-get install -y jq
 
-          apt-get update && apt-get install -y jq
+              if [ ! -f android/app/google-services.json ]; then
+                echo "❌ google-services.json missing!"
+                exit 1
+              fi
 
-          if [ ! -f android/app/google-services.json ]; then
-            echo "❌ google-services.json missing!"
-            exit 1
-          fi
+              cat android/app/google-services.json
 
-          cat android/app/google-services.json
+              export API_KEY=$(jq -r '.client[0].api_key[0].current_key' android/app/google-services.json)
+              export APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' android/app/google-services.json)
+              export PROJECT_ID=$(jq -r '.project_info.project_id' android/app/google-services.json)
+              export MESSAGING_SENDER_ID=$(jq -r '.project_info.project_number' android/app/google-services.json)
+              export STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' android/app/google-services.json)
 
-          API_KEY=$(jq -r '.client[0].api_key[0].current_key' android/app/google-services.json)
-          APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' android/app/google-services.json)
-          PROJECT_ID=$(jq -r '.project_info.project_id' android/app/google-services.json)
-          MESSAGING_SENDER_ID=$(jq -r '.project_info.project_number' android/app/google-services.json)
-          STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' android/app/google-services.json)
+              echo "export API_KEY=$API_KEY" >> $CM_ENV
+              echo "export APP_ID=$APP_ID" >> $CM_ENV
+              echo "export PROJECT_ID=$PROJECT_ID" >> $CM_ENV
+              echo "export MESSAGING_SENDER_ID=$MESSAGING_SENDER_ID" >> $CM_ENV
+              echo "export STORAGE_BUCKET=$STORAGE_BUCKET" >> $CM_ENV
 
-            echo "✅ Extracted Firebase Config:"
-            echo "🔑 API_KEY: $API_KEY"
-            echo "📱 APP_ID: $APP_ID"
-            echo "📦 PROJECT_ID: $PROJECT_ID"
-            echo "📨 MESSAGING_SENDER_ID: $MESSAGING_SENDER_ID"
-            echo "🪣 STORAGE_BUCKET: $STORAGE_BUCKET"
-          else
-            echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-          fi
-      #  if [ "$PUSH_NOTIFY" = "true" ]; then
-      #     apt-get update && apt-get install -y jq
-      #     ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
+              echo "✅ Firebase config exported"
+            else
+              echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
+            fi
 
-      #       API_KEY=$(jq -r '.client[0].api_key[0].current_key' android/app/google-services.json)
-      #       APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' android/app/google-services.json)
-      #       PROJECT_ID=$(jq -r '.project_info.project_id' android/app/google-services.json)
-      #       MESSAGING_SENDER_ID=$(jq -r '.project_info.project_number' android/app/google-services.json)
-      #       STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' android/app/google-services.json)
-      #       echo "Building with extracted Firebase config..."
 
-      #         else
-      #       echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
-      #     fi
+    # - &read_json
+    #   name: Read JSON file
+    #   script: |
+    #      if [ "$PUSH_NOTIFY" = "true" ]; then
+    #       echo "📖 Reading google-services.json..."
+
+    #       apt-get update && apt-get install -y jq
+
+    #       if [ ! -f android/app/google-services.json ]; then
+    #         echo "❌ google-services.json missing!"
+    #         exit 1
+    #       fi
+
+    #       cat android/app/google-services.json
+
+    #       API_KEY=$(jq -r '.client[0].api_key[0].current_key' android/app/google-services.json)
+    #       APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' android/app/google-services.json)
+    #       PROJECT_ID=$(jq -r '.project_info.project_id' android/app/google-services.json)
+    #       MESSAGING_SENDER_ID=$(jq -r '.project_info.project_number' android/app/google-services.json)
+    #       STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' android/app/google-services.json)
+
+    #         echo "✅ Extracted Firebase Config:"
+    #         echo "🔑 API_KEY: $API_KEY"
+    #         echo "📱 APP_ID: $APP_ID"
+    #         echo "📦 PROJECT_ID: $PROJECT_ID"
+    #         echo "📨 MESSAGING_SENDER_ID: $MESSAGING_SENDER_ID"
+    #         echo "🪣 STORAGE_BUCKET: $STORAGE_BUCKET"
+    #       else
+    #         echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
+    #       fi
 
     - &update_sdkver
       name: Updating SDK version
@@ -168,7 +186,15 @@ definitions:
        echo "✅ Start Building APK...."
           flutter clean
           flutter pub get
-          flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" --dart-define=FIREBASE_API_KEY="$API_KEY" --dart-define=FIREBASE_APP_ID="$APP_ID" --dart-define=FIREBASE_PROJECT_ID="$PROJECT_ID"  --dart-define=FIREBASE_MESSAGING_SENDER_ID="$MESSAGING_SENDER_ID" --dart-define=FIREBASE_STORAGE_BUCKET="$STORAGE_BUCKET" > flutter_build.log
+          # flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" --dart-define=FIREBASE_API_KEY="$API_KEY" --dart-define=FIREBASE_APP_ID="$APP_ID" --dart-define=FIREBASE_PROJECT_ID="$PROJECT_ID"  --dart-define=FIREBASE_MESSAGING_SENDER_ID="$MESSAGING_SENDER_ID" --dart-define=FIREBASE_STORAGE_BUCKET="$STORAGE_BUCKET" > flutter_build.log
+          flutter build apk --debug \
+          --dart-define=WEB_URL="$WEB_URL" \
+          --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
+          --dart-define=FIREBASE_API_KEY="$API_KEY" \
+          --dart-define=FIREBASE_APP_ID="$APP_ID" \
+          --dart-define=FIREBASE_PROJECT_ID="$PROJECT_ID" \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID="$MESSAGING_SENDER_ID" \
+          --dart-define=FIREBASE_STORAGE_BUCKET="$STORAGE_BUCKET"  > flutter_build.log
         echo "✅ Build APK Compleated...."
       
           echo "🔍 Searching for FCM Token in build logs..."
