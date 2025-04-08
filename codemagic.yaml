@@ -103,7 +103,7 @@ definitions:
    
           flutter clean
           flutter pub get
-          flutter build apk --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
+          flutter build apk --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" > flutter_build.log
 
       
           echo "🔍 Searching for FCM Token in build logs..."
@@ -237,9 +237,9 @@ workflows:
       - *set_splash_icons
       - *change_app_name
       - *Extract_FCM_Token
-      - *build_release_apk
-      #        - *build_abb
-      - *build_debug_apk
+      # - *build_release_apk
+      # - *build_abb
+      # - *build_debug_apk
     artifacts:
       - *android_apk
       - flutter_build.log
@@ -262,8 +262,8 @@ workflows:
       - *set_splash_icons
       - *change_app_name
       - *Extract_FCM_Token
-      - *build_release_apk
-#     - *build_abb
+      # - *build_release_apk
+    # - *build_abb
 #     - *build_debug_apk
     artifacts:
       - *android_apk

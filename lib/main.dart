@@ -8,9 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'firebase_initializer.dart';
 
-// import 'firebase_options.dart';
 
 bool hasInternet = true;
 
@@ -24,7 +22,7 @@ WebViewEnvironment? webViewEnvironment;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (pushNotify && !kIsWeb) {
+  if (pushNotify == true) {
     // await Firebase.initializeApp(
     //   options: DefaultFirebaseOptions.currentPlatform,
     // );
@@ -51,7 +49,8 @@ void main() async {
     debugPrint(
         "🚫 Firebase not initialized (pushNotify: $pushNotify, isWeb: $kIsWeb)");
   }
-  
+  debugPrint(
+      "Website URL: $webUrl");
   // if (pushNotify) {
   //   await Firebase.initializeApp();
   //   FirebaseMessaging.instance.getToken().then((token) {
@@ -136,7 +135,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    if (pushNotify) {
+    if (pushNotify == true) {
       FirebaseMessaging.instance.getToken().then((token) {
         debugPrint('✅ FCM Token: $token');
       });
