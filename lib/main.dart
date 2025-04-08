@@ -24,8 +24,9 @@ const String firebaseMessagingSenderId =
 const String firebaseStorageBucket =
     String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
 const String webUrl = String.fromEnvironment('WEB_URL');
-const bool pushNotify =
+const pushNotify =
     bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
+// const pushNotify = String.fromEnvironment('PUSH_NOTIFY', defaultValue: 'false').toLowerCase() == 'true';
 
 WebViewEnvironment? webViewEnvironment;
 
