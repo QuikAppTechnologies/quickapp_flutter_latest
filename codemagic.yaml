@@ -61,8 +61,8 @@ definitions:
 
   
 
-    - &Extract_FCM_Token
-      name: Install Firebase and Push Notification
+    - &Inject_Firebase
+      name: Inject Firebase and buildscript block
       script: |
         if [ "$PUSH_NOTIFY" = "true" ]; then
             echo "📦 Enabling Firebase integration..."
@@ -105,6 +105,7 @@ definitions:
       name: Read JSON file
       script: |
        if [ "$PUSH_NOTIFY" = "true" ]; then
+          apt-get update && apt-get install -y jq
           ls -l android/app/google-services.json || { echo "❌ google-services.json missing!"; exit 1; }
 
             API_KEY=$(jq -r '.client[0].api_key[0].current_key' android/app/google-services.json)
@@ -284,7 +285,7 @@ workflows:
       - *get_splash
       - *set_splash_icons
       - *change_app_name
-      - *Extract_FCM_Token
+      - *Inject_Firebase
       - *get_json
       - *read_json
       - *update_sdkver
@@ -313,7 +314,7 @@ workflows:
       - *get_splash
       - *set_splash_icons
       - *change_app_name
-      - *Extract_FCM_Token
+      - *Inject_Firebase
       # - *build_release_apk
     # - *build_abb
 #     - *build_debug_apk
