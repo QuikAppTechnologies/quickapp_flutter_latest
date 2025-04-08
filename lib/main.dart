@@ -16,21 +16,22 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 bool hasInternet = true;
 
 
-const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
-const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
-const String firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
-const String firebaseMessagingSenderId =
-    String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
-const String firebaseStorageBucket =
-    String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
-const String webUrl = String.fromEnvironment('WEB_URL');
-const pushNotify =
-    bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
-// const pushNotify = String.fromEnvironment('PUSH_NOTIFY', defaultValue: 'false').toLowerCase() == 'true';
+
 
 WebViewEnvironment? webViewEnvironment;
 
 void main() async {
+  const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+  const String firebaseProjectId =
+      String.fromEnvironment('FIREBASE_PROJECT_ID');
+  const String firebaseMessagingSenderId =
+      String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+  const String firebaseStorageBucket =
+      String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+  const String webUrl = String.fromEnvironment('WEB_URL');
+  const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
+// const pushNotify = String.fromEnvironment('PUSH_NOTIFY', defaultValue: 'false').toLowerCase() == 'true';
   WidgetsFlutterBinding.ensureInitialized();
     // Android settings for local notifications
   const AndroidInitializationSettings initializationSettingsAndroid =
