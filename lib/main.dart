@@ -10,6 +10,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 // import 'firebase_initializer.dart';
 
+// import 'firebase_options.dart';
+
 bool hasInternet = true;
 
 
@@ -23,6 +25,10 @@ WebViewEnvironment? webViewEnvironment;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (pushNotify && !kIsWeb) {
+    // await Firebase.initializeApp(
+    //   options: DefaultFirebaseOptions.currentPlatform,
+    // );
+
     await Firebase.initializeApp();
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 

@@ -73,8 +73,8 @@ definitions:
           # Run flutterfire configure (uses environment vars)
           flutterfire configure \
             --project=$FIREBASE_PROJECT_ID \
-            --android-package-name=com.example.quikapp_flutter_latest \
-            --out=lib/firebase_options.dart \
+            --android-package-name=$PKG_NAME \
+            # --out=lib/firebase_options.dart \
             --yes
 
           # Add google-services plugin if not already added
