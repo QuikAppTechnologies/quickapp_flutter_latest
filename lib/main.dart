@@ -36,7 +36,7 @@ Future<FirebaseOptions> loadFirebaseOptionsFromJson() async {
     storageBucket: storageBucket,
   );
 }
-
+const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
 
 WebViewEnvironment? webViewEnvironment;
 
