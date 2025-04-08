@@ -27,7 +27,16 @@ void main() async {
     //   options: DefaultFirebaseOptions.currentPlatform,
     // );
 
-    await Firebase.initializeApp();
+await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyBo-ihJ0vVkZJZeP2j5YPmXrdfxHSh9_C0",
+        appId: "1:68101928519:android:091e10cf76e417abf9a362",
+        messagingSenderId: "68101928519",
+        projectId: "pixawaretest",
+        storageBucket: "pixawaretest.firebasestorage.app",
+      ),
+    );
+    // await Firebase.initializeApp();
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
     messaging.getToken().then((token) {
