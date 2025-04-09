@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:permission_handler/permission_handler.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -42,21 +44,22 @@ debugPrint("storageBucket: $storageBucket\n");
   );
 }
 const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
+const bool isCameraEnabled = bool.fromEnvironment('IS_CAMERA', defaultValue: false);
+const bool isLocationEnabled = bool.fromEnvironment('IS_LOCATION', defaultValue: false);
+const bool isMicEnabled = bool.fromEnvironment('IS_MIC', defaultValue: false);
+const bool isNotificationEnabled =
+    bool.fromEnvironment('IS_NOTIFICATION', defaultValue: false);
+const bool isContactEnabled = bool.fromEnvironment('IS_CONTACT', defaultValue: false);
+const bool isSMSEnabled = bool.fromEnvironment('IS_SMS', defaultValue: false);
+const bool isPhoneEnabled = bool.fromEnvironment('IS_PHONE', defaultValue: false);
+const bool isBluetoothEnabled =
+    bool.fromEnvironment('IS_BLUETOOTH', defaultValue: false);
 
 WebViewEnvironment? webViewEnvironment;
 
 void main() async {
-  // const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
-  // const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
-  // const String firebaseProjectId =
-  //     String.fromEnvironment('FIREBASE_PROJECT_ID');
-  // const String firebaseMessagingSenderId =
-  //     String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
-  // const String firebaseStorageBucket =
-  //     String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
   const String webUrl = String.fromEnvironment('WEB_URL');
-  const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
-// const pushNotify = String.fromEnvironment('PUSH_NOTIFY', defaultValue: 'false').toLowerCase() == 'true';
+  // const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
   WidgetsFlutterBinding.ensureInitialized();
     // Android settings for local notifications
   const AndroidInitializationSettings initializationSettingsAndroid =
@@ -65,41 +68,19 @@ void main() async {
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  // await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      debugPrint("🔔 Notification tapped: ${response.payload}");
+      // Handle click action
+    },
+  );
   debugPrint("Push Notify: $pushNotify \n WEBURL: $webUrl \n");
   if (pushNotify == true) {
   await Firebase.initializeApp(
       options: await loadFirebaseOptionsFromJson(),
-    );
-  // try {
-  //     await Firebase.initializeApp(
-  //       options: const FirebaseOptions(
-  //         apiKey: "AIzaSyBo-ihJ0vVkZJZeP2j5YPmXrdfxHSh9_C0",
-  //         appId: "1:68101928519:android:091e10cf76e417abf9a362",
-  //         messagingSenderId: "68101928519",
-  //         projectId: "pixawaretest",
-  //         storageBucket: "pixawaretest.firebasestorage.app",
-  //       ),
-  //     );
-  //   } catch (e, s) {
-  //     debugPrint("🔥 Firebase init failed: $e\n$s");
-  //   }
-// try {
-  // await Firebase.initializeApp();
-  // await Firebase.initializeApp(
-  //       options: FirebaseOptions(
-  //         apiKey: firebaseApiKey,
-  //         appId: firebaseAppId,
-  //         messagingSenderId: firebaseMessagingSenderId,
-  //         projectId: firebaseProjectId,
-  //         storageBucket: firebaseStorageBucket,
-  //       ),
-  //     );
-    // } catch (e, s) {
-      
-    //   debugPrint("🔥 Firebase init failed: $e\n$s");
-    // }
-    
+    );  
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
     messaging.getToken().then((token) {
@@ -110,38 +91,38 @@ void main() async {
     await messaging.requestPermission();
 
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notification = message.notification;
-      final android = message.notification?.android;
-
-      if (notification != null && android != null) {
-        Fluttertoast.showToast(
-            msg: "🔔 Notification: ${message.notification?.title}");
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              'default_channel', // channel ID
-              'Default', // channel name
-              channelDescription: 'Default notification channel',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-              icon: '@mipmap/ic_launcher',
-            ),
-          ),
-        );
-      }
-    });
     // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      
+    //   final notification = message.notification;
+    //   final android = message.notification?.android;
+
+    //   if (notification != null && android != null) {
+    //     Fluttertoast.showToast(
+    //         msg: "🔔 Notification: ${message.notification?.title}");
+    //     flutterLocalNotificationsPlugin.show(
+    //       notification.hashCode,
+    //       notification.title,
+    //       notification.body,
+    //       NotificationDetails(
+    //         android: AndroidNotificationDetails(
+    //           'default_channel', // channel ID
+    //           'Default', // channel name
+    //           channelDescription: 'Default notification channel',
+    //           importance: Importance.max,
+    //           priority: Priority.high,
+    //           playSound: true,
+    //           icon: '@mipmap/ic_launcher',
+    //         ),
+    //       ),
+    //     );
+    //   }
     // });
+    // // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      
+    // // });
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    await messaging.subscribeToTopic("all");
+    // await messaging.subscribeToTopic("all");
   } else {
     debugPrint(
         "🚫 Firebase not initialized (pushNotify: $pushNotify, isWeb: $kIsWeb)");
@@ -182,6 +163,76 @@ class _MyAppState extends State<MyApp> {
     iframeAllow: "camera; microphone",
     iframeAllowFullscreen: true,
   );
+  void setupFirebaseMessaging() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // Request permission on iOS
+    if (Platform.isIOS) {
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
+    // Subscribe to platform-specific topics
+    if (Platform.isAndroid) {
+      await messaging.subscribeToTopic('android_users');
+    } else if (Platform.isIOS) {
+      await messaging.subscribeToTopic('ios_users');
+    }
+
+    // Subscribe to general topic
+    await messaging.subscribeToTopic('all_users');
+
+    // Foreground message handler
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final notification = message.notification;
+      final android = notification?.android;
+
+      if (notification != null && android != null) {
+        Fluttertoast.showToast(msg: "🔔 Notification: ${notification.title}");
+
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'default_channel',
+              'Default',
+              channelDescription: 'Default notification channel',
+              importance: Importance.max,
+              priority: Priority.high,
+              playSound: true,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
+    });
+
+    // Handle notification click when app is in background or terminated
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      Fluttertoast.showToast(
+          msg: "📲 Opened from Notification: ${message.notification?.title}");
+      // Navigate or handle logic here
+    });
+  }
+
+void requestPermissions() async {
+    if (isCameraEnabled) await Permission.camera.request();
+    if (isLocationEnabled) await Permission.location.request();
+    if (isMicEnabled) await Permission.microphone.request();
+    if (isNotificationEnabled) await Permission.notification.request();
+    if (isContactEnabled) await Permission.contacts.request();
+    if (isSMSEnabled) await Permission.sms.request();
+    if (isPhoneEnabled) await Permission.phone.request();
+    if (isBluetoothEnabled) await Permission.bluetooth.request();
+
+    // Always-requested
+    await Permission.storage.request(); // For Android
+  }
 
   @override
   void initState() {
@@ -192,35 +243,36 @@ class _MyAppState extends State<MyApp> {
         debugPrint('✅ FCM Token: $token');
       });
 
-      FirebaseMessaging.instance.subscribeToTopic("all");
-      FirebaseMessaging.instance.requestPermission();
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        Fluttertoast.showToast(
-            msg: "🔔 Notification: ${message.notification?.title}");
-            final notification = message.notification;
-        final android = message.notification?.android;
+      setupFirebaseMessaging();
+      // FirebaseMessaging.instance.subscribeToTopic("all");
+      // FirebaseMessaging.instance.requestPermission();
+      // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      //   Fluttertoast.showToast(
+      //       msg: "🔔 Notification: ${message.notification?.title}");
+      //       final notification = message.notification;
+      //   final android = message.notification?.android;
 
-        if (notification != null && android != null) {
-          Fluttertoast.showToast(
-              msg: "🔔 Notification: ${message.notification?.title}");
-          flutterLocalNotificationsPlugin.show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            NotificationDetails(
-              android: AndroidNotificationDetails(
-                'default_channel', // channel ID
-                'Default', // channel name
-                channelDescription: 'Default notification channel',
-                importance: Importance.max,
-                priority: Priority.high,
-                playSound: true,
-                icon: '@mipmap/ic_launcher',
-              ),
-            ),
-          );
-        }
-      });
+      //   if (notification != null && android != null) {
+      //     Fluttertoast.showToast(
+      //         msg: "🔔 Notification: ${message.notification?.title}");
+      //     flutterLocalNotificationsPlugin.show(
+      //       notification.hashCode,
+      //       notification.title,
+      //       notification.body,
+      //       NotificationDetails(
+      //         android: AndroidNotificationDetails(
+      //           'default_channel', // channel ID
+      //           'Default', // channel name
+      //           channelDescription: 'Default notification channel',
+      //           importance: Importance.max,
+      //           priority: Priority.high,
+      //           playSound: true,
+      //           icon: '@mipmap/ic_launcher',
+      //         ),
+      //       ),
+      //     );
+      //   }
+      // });
     }
 
     Connectivity().onConnectivityChanged.listen((_) {

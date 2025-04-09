@@ -45,5 +45,22 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses your location when in use.</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs location access in the background.</string>
+
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app uses Bluetooth to connect to nearby devices.</string>
 </dict>
 </plist>

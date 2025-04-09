@@ -13,11 +13,17 @@ definitions:
         WEB_URL: $WEB_URL
         url: $WEB_URL
         firebase_config_android: $firebase_config_android
-        FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
         PKG_NAME: $PKG_NAME
         EMAIL_ID: $EMAIL_ID
         PUSH_NOTIFY: $PUSH_NOTIFY
-        EMAIL_PASSWORD: $EMAIL_PASSWORD
+        IS_CAMERA: $IS_CAMERA
+        IS_LOCATION: $IS_LOCATION
+        IS_MIC: $IS_MIC
+        IS_NOTIFICATION: $IS_NOTIFICATION
+        IS_CONTACT: $IS_CONTACT
+        IS_SMS: $IS_SMS
+        IS_PHONE: $IS_PHONE
+        IS_BLUETOOTH: $IS_BLUETOOTH
 
   artifacts:
     #- &ipa_file build/ios/ipa/*.ipa
@@ -52,11 +58,17 @@ definitions:
         echo "WEB_URL: $WEB_URL"
         echo "SPLASH: $SPLASH"
         echo "firebase_config_android: $firebase_config_android"
-        echo "FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID"
         echo "PKG_NAME: $PKG_NAME"
         echo "EMAIL_ID: $EMAIL_ID"
         echo "PUSH_NOTIFY: $PUSH_NOTIFY"
-        echo "EMAIL_PASSWORD: $EMAIL_PASSWORD"
+         echo "IS_CAMERA: $IS_CAMERA"
+          echo "IS_LOCATION: $IS_LOCATION"
+          echo "IS_MIC: $IS_MIC"
+          echo "IS_NOTIFICATION: $IS_NOTIFICATION"
+          echo "IS_CONTACT: $IS_CONTACT"
+          echo "IS_SMS: $IS_SMS"
+          echo "IS_PHONE: $IS_PHONE"
+          echo "IS_BLUETOOTH: $IS_BLUETOOTH"
   
 
   
@@ -179,49 +191,84 @@ definitions:
         else
           echo "🚫 Firebase config skipped (PUSH_NOTIFY is not true)"
         fi
-   
+
+
     - &build_app
-      name: Building App
+      name: Building App with Feature Flags
       script: |
-       if [ "$PUSH_NOTIFY" = "true" ]; then
-       echo "✅ Start Building APK...."
+          echo "✅ Start Building APK...."
           flutter clean
           flutter pub get
-          flutter build apk --release \
-          --dart-define=WEB_URL="$WEB_URL" \
-          --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
-          --dart-define=FIREBASE_API_KEY="$API_KEY" \
-          --dart-define=FIREBASE_APP_ID="$APP_ID" \
-          --dart-define=FIREBASE_PROJECT_ID="$PROJECT_ID" \
-          --dart-define=FIREBASE_MESSAGING_SENDER_ID="$MESSAGING_SENDER_ID" \
-          --dart-define=FIREBASE_STORAGE_BUCKET="$STORAGE_BUCKET"  > flutter_build.log
-        echo "✅ Build APK Compleated...."
+          
+          if [ "$PUSH_NOTIFY" = "true" ]; then
+            flutter build apk --release \
+              --dart-define=WEB_URL="$WEB_URL" \
+              --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
+              --dart-define=IS_CAMERA="$IS_CAMERA" \
+              --dart-define=IS_LOCATION="$IS_LOCATION" \
+              --dart-define=IS_MIC="$IS_MIC" \
+              --dart-define=IS_NOTIFICATION="$IS_NOTIFICATION" \
+              --dart-define=IS_CONTACT="$IS_CONTACT" \
+              --dart-define=IS_SMS="$IS_SMS" \
+              --dart-define=IS_PHONE="$IS_PHONE" \
+              --dart-define=IS_BLUETOOTH="$IS_BLUETOOTH" > flutter_build.log
+              echo "✅ Build APK Compleated...."
+          else
+            flutter build apk --release \
+              --dart-define=WEB_URL="$WEB_URL" \
+              --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
+              --dart-define=IS_CAMERA="$IS_CAMERA" \
+              --dart-define=IS_LOCATION="$IS_LOCATION" \
+              --dart-define=IS_MIC="$IS_MIC" \
+              --dart-define=IS_NOTIFICATION="$IS_NOTIFICATION" \
+              --dart-define=IS_CONTACT="$IS_CONTACT" \
+              --dart-define=IS_SMS="$IS_SMS" \
+              --dart-define=IS_PHONE="$IS_PHONE" \
+              --dart-define=IS_BLUETOOTH="$IS_BLUETOOTH" > flutter_build.log
+              echo "✅ Build APK Compleated...."
+          fi  
+    # - &build_app
+    #   name: Building App
+    #   script: |
+    #    if [ "$PUSH_NOTIFY" = "true" ]; then
+    #    echo "✅ Start Building APK...."
+    #       flutter clean
+    #       flutter pub get
+    #       flutter build apk --release \
+    #       --dart-define=WEB_URL="$WEB_URL" \
+    #       --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
+    #       --dart-define=FIREBASE_API_KEY="$API_KEY" \
+    #       --dart-define=FIREBASE_APP_ID="$APP_ID" \
+    #       --dart-define=FIREBASE_PROJECT_ID="$PROJECT_ID" \
+    #       --dart-define=FIREBASE_MESSAGING_SENDER_ID="$MESSAGING_SENDER_ID" \
+    #       --dart-define=FIREBASE_STORAGE_BUCKET="$STORAGE_BUCKET"  > flutter_build.log
+    #     echo "✅ Build APK Compleated...."
       
-          # echo "🔍 Searching for FCM Token in build logs..."
-          # FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
+    #       # echo "🔍 Searching for FCM Token in build logs..."
+    #       # FCM_TOKEN=$(grep 'FCM Token:' flutter_build.log | awk -F':' '{print $2}' | xargs)
 
-          # if [ -n "$FCM_TOKEN" ]; then
-          #   echo "FCM Token for $APP_ID at $(date): $FCM_TOKEN" > fcm_token.txt
-          #   # echo "✅ FCM Token Found: $FCM_TOKEN"
-          #   # echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
+    #       # if [ -n "$FCM_TOKEN" ]; then
+    #       #   echo "FCM Token for $APP_ID at $(date): $FCM_TOKEN" > fcm_token.txt
+    #       #   # echo "✅ FCM Token Found: $FCM_TOKEN"
+    #       #   # echo "📩 FCM Token: $FCM_TOKEN" > fcm_token.txt
 
-          #   echo "📧 Sending FCM token to $EMAIL_ID"
-          #   curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
-          #     --mail-from "$EMAIL_ID" \
-          #     --mail-rcpt "$EMAIL_ID" \
-          #     --upload-file fcm_token.txt \
-          #     --user "$EMAIL_ID:$EMAIL_PASSWORD" \
-          #     --insecure
+    #       #   echo "📧 Sending FCM token to $EMAIL_ID"
+    #       #   curl -s --url 'smtps://smtp.gmail.com:465' --ssl-reqd \
+    #       #     --mail-from "$EMAIL_ID" \
+    #       #     --mail-rcpt "$EMAIL_ID" \
+    #       #     --upload-file fcm_token.txt \
+    #       #     --user "$EMAIL_ID:$EMAIL_PASSWORD" \
+    #       #     --insecure
 
-          #   echo "✅ Email sent successfully!"
-          # else
-          #   echo "⚠️ FCM Token not found in build logs!"
-          # fi           
-        else
-            flutter clean
-            flutter pub get
-            flutter build apk  --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY"
-          fi
+    #       #   echo "✅ Email sent successfully!"
+    #       # else
+    #       #   echo "⚠️ FCM Token not found in build logs!"
+    #       # fi           
+    #     else
+    #         flutter clean
+    #         flutter pub get
+    #         flutter build apk  --debug --dart-define=WEB_URL="$WEB_URL" --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY"
+    #       fi
        
     - &get_logo
       name: Get logo image from logoUrl
@@ -319,7 +366,7 @@ definitions:
 workflows:
   android-workflow:
     name: Android Workflow
-    max_build_duration: 60
+    max_build_duration: 65
     instance_type: mac_mini_m1
     environment:
       flutter: stable
@@ -334,7 +381,7 @@ workflows:
       - *change_app_name
       - *Inject_Firebase
       - *get_json
-      - *read_json
+      # - *read_json
       - *update_sdkver
       - *build_app
       # - *build_release_apk
@@ -348,7 +395,7 @@ workflows:
     publishing: *email_release
   android-release-workflow:
     name: Android release Workflow
-    max_build_duration: 60
+    max_build_duration: 65
     instance_type: mac_mini_m2
     environment:
       flutter: stable
