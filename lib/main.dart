@@ -187,58 +187,56 @@ class _MyAppState extends State<MyApp> {
     await messaging.subscribeToTopic('all_users');
 
     // Foreground message handler
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final internalUrl = message.data['url'];
-      final imageUrl = message.notification?.android?.imageUrl ??
-          message.notification?.apple?.imageUrl ??
-          message.data['image'];
+AndroidNotificationDetails _defaultAndroidDetails(
+        RemoteNotification notification) {
+      return AndroidNotificationDetails(
+        'default_channel',
+        'Default',
+        channelDescription: 'Default notification channel',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        icon: '@mipmap/ic_launcher',
+      );
+    }
 
-      if (internalUrl != null && webViewController != null) {
-        webViewController?.loadUrl(
-          urlRequest: URLRequest(url: WebUri(internalUrl)),
-        );
-      }
-
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final imageUrl =
+          message.notification?.android?.imageUrl ?? message.data['image'];
       final notification = message.notification;
       final android = notification?.android;
 
       if (notification != null && android != null) {
-        Fluttertoast.showToast(msg: "🔔 Notification: ${notification.title}");
-
         AndroidNotificationDetails androidDetails;
 
         if (imageUrl != null && imageUrl.isNotEmpty) {
-          // Download image to local temp file
-          final http.Response response = await http.get(Uri.parse(imageUrl));
-          final tempDir = await getTemporaryDirectory();
-          final filePath = '${tempDir.path}/notif_image.jpg';
-          final file = File(filePath);
-          await file.writeAsBytes(response.bodyBytes);
+          try {
+            final http.Response response = await http.get(Uri.parse(imageUrl));
+            final tempDir = await getTemporaryDirectory();
+            final filePath = '${tempDir.path}/notif_image.jpg';
+            final file = File(filePath);
+            await file.writeAsBytes(response.bodyBytes);
 
-          androidDetails = AndroidNotificationDetails(
-            'default_channel',
-            'Default',
-            channelDescription: 'Default notification channel',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            icon: '@mipmap/ic_launcher',
-            styleInformation: BigPictureStyleInformation(
-              FilePathAndroidBitmap(filePath),
-              contentTitle: notification.title,
-              summaryText: notification.body,
-            ),
-          );
+            androidDetails = AndroidNotificationDetails(
+              'default_channel',
+              'Default',
+              channelDescription: 'Default notification channel',
+              importance: Importance.max,
+              priority: Priority.high,
+              styleInformation: BigPictureStyleInformation(
+                FilePathAndroidBitmap(filePath),
+                contentTitle: notification.title,
+                summaryText: notification.body,
+              ),
+              playSound: true,
+              icon: '@mipmap/ic_launcher',
+            );
+          } catch (e) {
+            print('❌ Failed to load image: $e');
+            androidDetails = _defaultAndroidDetails(notification);
+          }
         } else {
-          androidDetails = AndroidNotificationDetails(
-            'default_channel',
-            'Default',
-            channelDescription: 'Default notification channel',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            icon: '@mipmap/ic_launcher',
-          );
+          androidDetails = _defaultAndroidDetails(notification);
         }
 
         flutterLocalNotificationsPlugin.show(
@@ -248,7 +246,71 @@ class _MyAppState extends State<MyApp> {
           NotificationDetails(android: androidDetails),
         );
       }
-    });   
+    });
+
+
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+  //     final internalUrl = message.data['url'];
+  //     final imageUrl = message.notification?.android?.imageUrl ??
+  //         message.notification?.apple?.imageUrl ??
+  //         message.data['image'];
+
+  //     if (internalUrl != null && webViewController != null) {
+  //       webViewController?.loadUrl(
+  //         urlRequest: URLRequest(url: WebUri(internalUrl)),
+  //       );
+  //     }
+
+  //     final notification = message.notification;
+  //     final android = notification?.android;
+
+  //     if (notification != null && android != null) {
+  //       Fluttertoast.showToast(msg: "🔔 Notification: ${notification.title}");
+
+  //       AndroidNotificationDetails androidDetails;
+
+  //       if (imageUrl != null && imageUrl.isNotEmpty) {
+  //         // Download image to local temp file
+  //         final http.Response response = await http.get(Uri.parse(imageUrl));
+  //         final tempDir = await getTemporaryDirectory();
+  //         final filePath = '${tempDir.path}/notif_image.jpg';
+  //         final file = File(filePath);
+  //         await file.writeAsBytes(response.bodyBytes);
+
+  //         androidDetails = AndroidNotificationDetails(
+  //           'default_channel',
+  //           'Default',
+  //           channelDescription: 'Default notification channel',
+  //           importance: Importance.max,
+  //           priority: Priority.high,
+  //           playSound: true,
+  //           icon: '@mipmap/ic_launcher',
+  //           styleInformation: BigPictureStyleInformation(
+  //             FilePathAndroidBitmap(filePath),
+  //             contentTitle: notification.title,
+  //             summaryText: notification.body,
+  //           ),
+  //         );
+  //       } else {
+  //         androidDetails = AndroidNotificationDetails(
+  //           'default_channel',
+  //           'Default',
+  //           channelDescription: 'Default notification channel',
+  //           importance: Importance.max,
+  //           priority: Priority.high,
+  //           playSound: true,
+  //           icon: '@mipmap/ic_launcher',
+  //         );
+  //       }
+
+  //       flutterLocalNotificationsPlugin.show(
+  //         notification.hashCode,
+  //         notification.title,
+  //         notification.body,
+  //         NotificationDetails(android: androidDetails),
+  //       );
+  //     }
+  //   });   
     
      // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     //     final internalUrl = message.data['url'];
