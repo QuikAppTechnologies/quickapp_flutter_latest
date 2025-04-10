@@ -58,6 +58,10 @@ const bool isBluetoothEnabled =
 
 WebViewEnvironment? webViewEnvironment;
 
+
+
+
+
 void main() async {
   const String webUrl = String.fromEnvironment('WEB_URL');
   // const pushNotify = bool.fromEnvironment('PUSH_NOTIFY', defaultValue: false);
@@ -90,36 +94,8 @@ void main() async {
 
     await messaging.setAutoInitEnabled(true);
     await messaging.requestPermission();
+    
 
-
-    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    //   final notification = message.notification;
-    //   final android = message.notification?.android;
-
-    //   if (notification != null && android != null) {
-    //     Fluttertoast.showToast(
-    //         msg: "🔔 Notification: ${message.notification?.title}");
-    //     flutterLocalNotificationsPlugin.show(
-    //       notification.hashCode,
-    //       notification.title,
-    //       notification.body,
-    //       NotificationDetails(
-    //         android: AndroidNotificationDetails(
-    //           'default_channel', // channel ID
-    //           'Default', // channel name
-    //           channelDescription: 'Default notification channel',
-    //           importance: Importance.max,
-    //           priority: Priority.high,
-    //           playSound: true,
-    //           icon: '@mipmap/ic_launcher',
-    //         ),
-    //       ),
-    //     );
-    //   }
-    // });
-    // // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      
-    // // });
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -201,10 +177,17 @@ AndroidNotificationDetails _defaultAndroidDetails(
     }
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final internalUrl = message.data['url'];
       final imageUrl =
           message.notification?.android?.imageUrl ?? message.data['image'];
       final notification = message.notification;
       final android = notification?.android;
+
+           if (internalUrl != null && webViewController != null) {
+            webViewController?.loadUrl(
+              urlRequest: URLRequest(url: WebUri(internalUrl)),
+            );
+          }
 
       if (notification != null && android != null) {
         AndroidNotificationDetails androidDetails;
@@ -217,20 +200,40 @@ AndroidNotificationDetails _defaultAndroidDetails(
             final file = File(filePath);
             await file.writeAsBytes(response.bodyBytes);
 
-            androidDetails = AndroidNotificationDetails(
+              androidDetails = AndroidNotificationDetails(
               'default_channel',
               'Default',
               channelDescription: 'Default notification channel',
               importance: Importance.max,
               priority: Priority.high,
-              styleInformation: BigPictureStyleInformation(
-                FilePathAndroidBitmap(filePath),
-                contentTitle: notification.title,
-                summaryText: notification.body,
-              ),
               playSound: true,
               icon: '@mipmap/ic_launcher',
+              styleInformation: BigPictureStyleInformation(
+                FilePathAndroidBitmap(filePath), // Big image
+                largeIcon: FilePathAndroidBitmap(
+                    filePath), // Thumbnail/Avatar-style icon
+                contentTitle: '<b>${notification.title}</b>', // Bold title
+                summaryText: notification.body,
+                htmlFormatContentTitle: true,
+                htmlFormatSummaryText: true,
+              ),
             );
+            
+            // androidDetails = AndroidNotificationDetails(
+            //   'default_channel',
+            //   'Default',
+            //   channelDescription: 'Default notification channel',
+            //   importance: Importance.max,
+            //   priority: Priority.high,
+            //   styleInformation: BigPictureStyleInformation(
+            //     FilePathAndroidBitmap(filePath),
+            //     contentTitle: notification.title,
+            //     summaryText: notification.body,
+                
+            //   ),
+            //   playSound: true,
+            //   icon: '@mipmap/ic_launcher',
+            // );
           } catch (e) {
             print('❌ Failed to load image: $e');
             androidDetails = _defaultAndroidDetails(notification);
